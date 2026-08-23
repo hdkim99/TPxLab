@@ -13,6 +13,7 @@ import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
+from tpxlab import __version__
 from tpxlab.export import export_bundle
 from tpxlab.io import ColumnMapping, auto_map_columns, raw_data_from_frame, read_table
 from tpxlab.models import (
@@ -375,7 +376,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("TPxLab GUI dependencies imported successfully")
         return 0
     root = tk.Tk()
-    root.title("TPxLab 0.1.0")
+    root.title(f"TPxLab {__version__}")
     root.geometry("1180x760")
     TpxLabApp(root)
     root.mainloop()

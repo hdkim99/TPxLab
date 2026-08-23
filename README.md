@@ -16,7 +16,7 @@ reproducible exports. The same `AnalysisService` powers its Python API, CLI, and
 
 ```bash
 python -m pip install \
-  https://github.com/hdkim99/TPxLab/releases/download/v0.1.0/tpxlab-0.1.0-py3-none-any.whl
+  https://github.com/hdkim99/TPxLab/releases/download/v0.1.1/tpxlab-0.1.1-py3-none-any.whl
 ```
 
 TPxLab is not yet published on PyPI. For a source checkout:
@@ -54,7 +54,7 @@ result = AnalysisService().analyze(
 print(result.fits[0].center, result.integrated_peaks[0].area)
 ```
 
-## Support status in v0.1.0
+## Support status in v0.1.1
 
 | Capability | Status | Notes |
 |---|---|---|

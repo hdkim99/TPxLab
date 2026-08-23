@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
+from tpxlab import __version__
 from tpxlab.export import export_bundle
 from tpxlab.io import ColumnMapping, load_raw_data
 from tpxlab.models import (
@@ -25,7 +26,7 @@ def _parser() -> argparse.ArgumentParser:
         prog="tpxlab",
         description="Reproducible TPx signal analysis with explicit units and settings.",
     )
-    parser.add_argument("--version", action="version", version="TPxLab 0.1.0")
+    parser.add_argument("--version", action="version", version=f"TPxLab {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     analyze = subparsers.add_parser("analyze", help="analyze a CSV/XLSX TPx dataset")
