@@ -23,6 +23,13 @@ def test_general_ci_pins_actions_and_runs_the_complete_scientific_package_path()
     assert "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1" in workflow
     assert 'PIP_NO_CACHE_DIR: "1"' in workflow
     assert "cache: pip" not in workflow
+    assert "/opt/catalysttwin-actions/shared-gui-runtime" in workflow
+    assert 'echo "${TPXLAB_GUI_RUNTIME}/usr/bin" >> "${GITHUB_PATH}"' in workflow
+    assert "LD_LIBRARY_PATH=" in workflow
+    assert "TK_LIBRARY=" in workflow
+    assert "command -v Xvfb" in workflow
+    assert "command -v xvfb-run" in workflow
+    assert "python -c 'import tkinter" in workflow
     for command in (
         "ruff format --check .",
         "ruff check .",

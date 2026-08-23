@@ -35,6 +35,25 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.14"
+      - name: Configure and verify the shared headless GUI runtime
+        env:
+          TPXLAB_GUI_RUNTIME: /opt/catalysttwin-actions/shared-gui-runtime
+        run: |
+          test -x "${TPXLAB_GUI_RUNTIME}/usr/bin/Xvfb"
+          test -x "${TPXLAB_GUI_RUNTIME}/usr/bin/xvfb-run"
+          test -d "${TPXLAB_GUI_RUNTIME}/usr/lib/aarch64-linux-gnu"
+          test -d "${TPXLAB_GUI_RUNTIME}/usr/share/tcltk/tk8.6"
+          echo "${TPXLAB_GUI_RUNTIME}/usr/bin" >> "${GITHUB_PATH}"
+          {
+            echo "LD_LIBRARY_PATH=${TPXLAB_GUI_RUNTIME}/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+            echo "TK_LIBRARY=${TPXLAB_GUI_RUNTIME}/usr/share/tcltk/tk8.6"
+          } >> "${GITHUB_ENV}"
+          export PATH="${TPXLAB_GUI_RUNTIME}/usr/bin:${PATH}"
+          export LD_LIBRARY_PATH="${TPXLAB_GUI_RUNTIME}/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+          export TK_LIBRARY="${TPXLAB_GUI_RUNTIME}/usr/share/tcltk/tk8.6"
+          command -v Xvfb
+          command -v xvfb-run
+          python -c 'import tkinter; print(f"Tk {tkinter.TkVersion}")'
       - name: Create isolated job environment
         run: |
           export TPXLAB_CI_ROOT="${RUNNER_TEMP}/tpxlab-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
