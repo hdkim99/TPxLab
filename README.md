@@ -15,23 +15,19 @@ unit-checked quantities, diagnostics, figures, and reproducible exports. One
 
 ## Install
 
-Main is the tested `0.2.0` development line and is not yet a GitHub or PyPI release:
+Install the current stable release from PyPI:
+
+```bash
+python -m pip install tpxlab
+```
+
+For development or to run the bundled examples from a source checkout:
 
 ```bash
 git clone https://github.com/hdkim99/TPxLab.git
 cd TPxLab
-python -m pip install .
+python -m pip install -e .
 ```
-
-The latest immutable release remains `0.1.1` (independent peak fitting):
-
-```bash
-python -m pip install \
-  https://github.com/hdkim99/TPxLab/releases/download/v0.1.1/tpxlab-0.1.1-py3-none-any.whl
-```
-
-TPxLab is not yet published on PyPI. The release workflow is prepared for PyPI Trusted
-Publishing but does not contain an API token or password.
 
 The repository social-preview candidate is the
 [actual bundled-example result](https://raw.githubusercontent.com/hdkim99/TPxLab/main/docs/tpxlab-social-preview.png),
@@ -39,7 +35,7 @@ not a mock interface.
 
 ## 30-second global quickstart
 
-From a source checkout:
+For the bundled overlapping example in a source checkout:
 
 ```bash
 tpxlab analyze examples/overlapping_tpr.csv \
@@ -103,7 +99,7 @@ result = AnalysisService().analyze(
 print(result.global_fit.identifiable, result.global_fit.statistics.r_squared)
 ```
 
-## Support status in v0.2.0
+## Support status in v0.2.x
 
 | Capability | Status | Notes |
 |---|---|---|

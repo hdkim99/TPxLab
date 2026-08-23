@@ -27,9 +27,14 @@ def test_version_is_consistent_across_package_and_release_surfaces() -> None:
     assert gui.__version__ == runtime_version
     assert f"version: {runtime_version}" in citation
     assert f"## {runtime_version} -" in changelog
-    assert f"the tested `{runtime_version}` development line" in readme
+    release_line = ".".join(runtime_version.split(".")[:2])
+    assert "python -m pip install tpxlab" in readme
+    assert "not yet published on PyPI" not in readme
+    assert "not yet a GitHub or PyPI release" not in readme
+    assert "latest immutable release remains" not in readme
+    assert "tpxlab-0.1.1-py3-none-any.whl" not in readme
     assert f"/v{runtime_version}/tpxlab-{runtime_version}-py3-none-any.whl" not in readme
-    assert f"Support status in v{runtime_version}" in readme
+    assert f"Support status in v{release_line}.x" in readme
 
 
 def test_pypi_metadata_has_human_author_four_urls_and_absolute_readme_image() -> None:

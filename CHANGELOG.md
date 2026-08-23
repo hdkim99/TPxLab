@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.1 - 2026-08-23
+
+- Correct the PyPI installation instructions and public release status in the package
+  long description. Scientific calculations and public APIs are unchanged from 0.2.0.
+
+## 0.2.0 - 2026-08-23
 
 - Add genuine simultaneous global deconvolution over one summed residual with mixed
   Gaussian, Lorentzian, and Voigt components.
