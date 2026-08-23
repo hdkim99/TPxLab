@@ -49,10 +49,12 @@ def preparation_figure(prepared: PreparedData) -> Figure:
 
 
 def analysis_figure(result: AnalysisResult) -> Figure:
-    """Create a two-panel diagnostic figure without relying on global pyplot state."""
+    """Create raw, deconvolution, and residual diagnostics without pyplot state."""
 
-    figure = Figure(figsize=(8, 6), constrained_layout=True)
-    raw_axis, processed_axis = figure.subplots(2, 1, sharex=True)
+    figure = Figure(figsize=(9, 8), constrained_layout=True)
+    raw_axis, processed_axis, residual_axis = figure.subplots(
+        3, 1, sharex=True, height_ratios=(1.0, 1.4, 0.6)
+    )
     raw_axis.plot(result.raw.temperature, result.raw.signal, color="0.25", label="raw")
     raw_axis.plot(result.raw.temperature, result.baseline, color="tab:orange", label="baseline")
     raw_axis.set_ylabel(f"Signal ({result.raw.signal_unit})")
@@ -61,14 +63,36 @@ def analysis_figure(result: AnalysisResult) -> Figure:
         result.raw.temperature, result.processed_signal, color="tab:blue", label="processed"
     )
     if result.fits:
+        for fit, component in zip(result.fits, result.component_signals, strict=True):
+            processed_axis.plot(
+                result.raw.temperature,
+                component,
+                linewidth=1.1,
+                linestyle="--",
+                label=f"component {fit.peak_id} ({fit.model})",
+            )
         processed_axis.plot(
-            result.raw.temperature, result.fitted_signal, color="tab:red", label="fitted"
+            result.raw.temperature,
+            result.fitted_signal,
+            color="black",
+            linewidth=1.5,
+            label="total fit",
         )
         for fit in result.fits:
             processed_axis.axvline(fit.center, color="0.5", linestyle=":", linewidth=0.8)
-    processed_axis.set_xlabel(f"Temperature ({result.raw.temperature_unit})")
     processed_axis.set_ylabel(f"Corrected signal ({result.raw.signal_unit})")
     processed_axis.legend()
+    residual_axis.axhline(0, color="0.4", linewidth=0.8)
+    residual_axis.plot(
+        result.raw.temperature,
+        result.residual_signal,
+        color="tab:purple",
+        linewidth=0.9,
+        label="observed - total fit",
+    )
+    residual_axis.set_xlabel(f"Temperature ({result.raw.temperature_unit})")
+    residual_axis.set_ylabel("Residual")
+    residual_axis.legend()
     return figure
 
 

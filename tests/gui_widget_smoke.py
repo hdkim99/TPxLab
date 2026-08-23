@@ -24,13 +24,29 @@ def main() -> int:
         app = TpxLabApp(root)
         app.set_raw_data(raw)
         app.baseline_method.set("linear")
-        app.peak_tree.insert("", tk.END, values=(401, 340, 460))
+        app.peak_tree.insert(
+            "",
+            tk.END,
+            values=(401, 340, 460, "gaussian", 380, 420, 5, 40, "{}", "", ""),
+        )
         app.run_analysis()
         root.update_idletasks()
         if app.result is None or app.canvas is None:
             raise RuntimeError("GUI did not execute or render the analysis result")
-        if app.result.seeds != (PeakSeed(401, 340, 460),):
+        expected_seed = PeakSeed(
+            401,
+            340,
+            460,
+            model="gaussian",
+            center_lower=380,
+            center_upper=420,
+            width_lower=5,
+            width_upper=40,
+        )
+        if app.result.seeds != (expected_seed,):
             raise RuntimeError("GUI peak edits did not reach the analysis service")
+        if app.result.global_fit is None:
+            raise RuntimeError("GUI fit mode did not reach simultaneous fitting")
     finally:
         root.destroy()
     print("TPxLab real-widget backend smoke passed")

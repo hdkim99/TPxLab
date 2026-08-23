@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import tkinter as tk
 from collections.abc import Sequence
 from pathlib import Path
@@ -20,9 +21,11 @@ from tpxlab.models import (
     AnalysisResult,
     AnalysisSettings,
     BaselineMethod,
+    FitMode,
     PeakModel,
     PeakSeed,
     RawData,
+    SharedWidthParameter,
 )
 from tpxlab.pipeline import AnalysisService
 from tpxlab.plotting import analysis_figure, preparation_figure, raw_figure, save_figure
@@ -52,6 +55,7 @@ class TpxLabApp(ttk.Frame):
         self.signal_unit = tk.StringVar(value="millivolt")
         self.baseline_method = tk.StringVar(value="als")
         self.peak_model = tk.StringVar(value="gaussian")
+        self.fit_mode = tk.StringVar(value="global")
         self.prominence = tk.StringVar()
         self.smoothing_window = tk.StringVar()
         self.calibration_value = tk.StringVar()
@@ -61,6 +65,14 @@ class TpxLabApp(ttk.Frame):
         self.peak_center = tk.StringVar()
         self.peak_left = tk.StringVar()
         self.peak_right = tk.StringVar()
+        self.component_model = tk.StringVar(value="gaussian")
+        self.center_lower = tk.StringVar()
+        self.center_upper = tk.StringVar()
+        self.width_lower = tk.StringVar()
+        self.width_upper = tk.StringVar()
+        self.fixed_parameters = tk.StringVar(value="{}")
+        self.shared_width_group = tk.StringVar()
+        self.shared_width_parameter = tk.StringVar()
         self.status = tk.StringVar(value="Load a CSV or XLSX dataset.")
 
     def _build_controls(self) -> None:
@@ -90,47 +102,87 @@ class TpxLabApp(ttk.Frame):
         self._labeled_entry(controls, 9, "Smooth window", self.smoothing_window)
         self._labeled_entry(controls, 10, "Prominence", self.prominence)
         self._labeled_combo(
-            controls, 11, "Peak model", self.peak_model, ("gaussian", "lorentzian", "voigt")
+            controls,
+            11,
+            "Fit mode",
+            self.fit_mode,
+            ("global", "independent"),
+        )
+        self._labeled_combo(
+            controls, 12, "Default model", self.peak_model, ("gaussian", "lorentzian", "voigt")
         )
         ttk.Button(controls, text="Prepare + detect", command=self.prepare_and_detect).grid(
-            row=12, column=0, columnspan=2, sticky="ew", pady=(6, 2)
+            row=13, column=0, columnspan=2, sticky="ew", pady=(6, 2)
         )
 
-        self.peak_tree = ttk.Treeview(
-            controls, columns=("center", "left", "right"), show="headings", height=5
+        peak_columns = (
+            "center",
+            "left",
+            "right",
+            "model",
+            "center_lower",
+            "center_upper",
+            "width_lower",
+            "width_upper",
+            "fixed",
+            "shared_group",
+            "shared_parameter",
         )
-        for name in ("center", "left", "right"):
-            self.peak_tree.heading(name, text=name.title())
-            self.peak_tree.column(name, width=74)
-        self.peak_tree.grid(row=13, column=0, columnspan=2, sticky="ew")
+        self.peak_tree = ttk.Treeview(
+            controls, columns=peak_columns, show="headings", height=5
+        )
+        for name in peak_columns:
+            self.peak_tree.heading(name, text=name.replace("_", " ").title())
+            self.peak_tree.column(name, width=78)
+        self.peak_tree.grid(row=14, column=0, columnspan=2, sticky="ew")
         self.peak_tree.bind("<<TreeviewSelect>>", self._load_selected_peak)
-        self._labeled_entry(controls, 14, "Center", self.peak_center)
-        self._labeled_entry(controls, 15, "Left", self.peak_left)
-        self._labeled_entry(controls, 16, "Right", self.peak_right)
+        self._labeled_entry(controls, 15, "Center", self.peak_center)
+        self._labeled_entry(controls, 16, "Integration left", self.peak_left)
+        self._labeled_entry(controls, 17, "Integration right", self.peak_right)
+        self._labeled_combo(
+            controls,
+            18,
+            "Component model",
+            self.component_model,
+            ("gaussian", "lorentzian", "voigt"),
+        )
+        self._labeled_entry(controls, 19, "Center lower", self.center_lower)
+        self._labeled_entry(controls, 20, "Center upper", self.center_upper)
+        self._labeled_entry(controls, 21, "Width lower", self.width_lower)
+        self._labeled_entry(controls, 22, "Width upper", self.width_upper)
+        self._labeled_entry(controls, 23, "Fixed params JSON", self.fixed_parameters)
+        self._labeled_entry(controls, 24, "Shared width group", self.shared_width_group)
+        self._labeled_combo(
+            controls,
+            25,
+            "Shared parameter",
+            self.shared_width_parameter,
+            ("", "sigma", "gamma"),
+        )
         peak_buttons = ttk.Frame(controls)
-        peak_buttons.grid(row=17, column=0, columnspan=2, sticky="ew")
+        peak_buttons.grid(row=26, column=0, columnspan=2, sticky="ew")
         ttk.Button(peak_buttons, text="Add", command=self.add_peak).pack(side=tk.LEFT)
         ttk.Button(peak_buttons, text="Update", command=self.update_peak).pack(side=tk.LEFT)
         ttk.Button(peak_buttons, text="Remove", command=self.remove_peak).pack(side=tk.LEFT)
 
         ttk.Label(controls, text="Optional quantification").grid(
-            row=18, column=0, columnspan=2, sticky="w", pady=(8, 0)
+            row=27, column=0, columnspan=2, sticky="w", pady=(8, 0)
         )
-        self._labeled_entry(controls, 19, "Calibration", self.calibration_value)
-        self._labeled_entry(controls, 20, "Calibration unit", self.calibration_unit)
-        self._labeled_entry(controls, 21, "Sample mass", self.sample_mass_value)
-        self._labeled_entry(controls, 22, "Mass unit", self.sample_mass_unit)
+        self._labeled_entry(controls, 28, "Calibration", self.calibration_value)
+        self._labeled_entry(controls, 29, "Calibration unit", self.calibration_unit)
+        self._labeled_entry(controls, 30, "Sample mass", self.sample_mass_value)
+        self._labeled_entry(controls, 31, "Mass unit", self.sample_mass_unit)
         ttk.Button(controls, text="Fit + quantify", command=self.run_analysis).grid(
-            row=23, column=0, columnspan=2, sticky="ew", pady=(6, 2)
+            row=32, column=0, columnspan=2, sticky="ew", pady=(6, 2)
         )
         ttk.Button(controls, text="Export workbook", command=self.export_result).grid(
-            row=24, column=0, columnspan=2, sticky="ew"
+            row=33, column=0, columnspan=2, sticky="ew"
         )
         ttk.Button(controls, text="Export figure", command=self.export_figure).grid(
-            row=25, column=0, columnspan=2, sticky="ew"
+            row=34, column=0, columnspan=2, sticky="ew"
         )
         ttk.Label(controls, textvariable=self.status, wraplength=280).grid(
-            row=26, column=0, columnspan=2, sticky="w", pady=(8, 0)
+            row=35, column=0, columnspan=2, sticky="w", pady=(8, 0)
         )
 
     @staticmethod
@@ -222,6 +274,7 @@ class TpxLabApp(ttk.Frame):
                 float(self.prominence.get()) if self.prominence.get().strip() else None
             ),
             peak_model=cast(PeakModel, self.peak_model.get()),
+            fit_mode=cast(FitMode, self.fit_mode.get()),
             calibration_value=float(calibration_value) if calibration_value else None,
             calibration_unit=self.calibration_unit.get() if calibration_value else None,
             sample_mass_value=float(sample_mass_value) if sample_mass_value else None,
@@ -251,6 +304,14 @@ class TpxLabApp(ttk.Frame):
                     seed.center,
                     "" if seed.left is None else seed.left,
                     "" if seed.right is None else seed.right,
+                    seed.model or self.peak_model.get(),
+                    "" if seed.center_lower is None else seed.center_lower,
+                    "" if seed.center_upper is None else seed.center_upper,
+                    "" if seed.width_lower is None else seed.width_lower,
+                    "" if seed.width_upper is None else seed.width_upper,
+                    json.dumps(seed.fixed_parameters, sort_keys=True),
+                    seed.shared_width_group or "",
+                    seed.shared_width_parameter or "",
                 ),
             )
 
@@ -260,23 +321,82 @@ class TpxLabApp(ttk.Frame):
             values = self.peak_tree.item(item, "values")
             if isinstance(values, str):
                 raise ValueError("peak table returned invalid row data")
-            center, left, right = values
+            (
+                center,
+                left,
+                right,
+                model,
+                center_lower,
+                center_upper,
+                width_lower,
+                width_upper,
+                fixed_parameters,
+                shared_width_group,
+                shared_width_parameter,
+            ) = values
+            fixed = json.loads(str(fixed_parameters))
+            if not isinstance(fixed, dict) or not all(
+                isinstance(name, str)
+                and isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                for name, value in fixed.items()
+            ):
+                raise ValueError("fixed parameters must be a JSON object of numeric values")
             seeds.append(
                 PeakSeed(
                     center=float(center),
                     left=float(left) if str(left) else None,
                     right=float(right) if str(right) else None,
+                    model=cast(PeakModel, str(model)),
+                    center_lower=float(center_lower) if str(center_lower) else None,
+                    center_upper=float(center_upper) if str(center_upper) else None,
+                    width_lower=float(width_lower) if str(width_lower) else None,
+                    width_upper=float(width_upper) if str(width_upper) else None,
+                    fixed_parameters={name: float(value) for name, value in fixed.items()},
+                    shared_width_group=(
+                        str(shared_width_group) if str(shared_width_group) else None
+                    ),
+                    shared_width_parameter=(
+                        cast(SharedWidthParameter, str(shared_width_parameter))
+                        if str(shared_width_parameter)
+                        else None
+                    ),
                 )
             )
         return tuple(seeds)
 
+    def _peak_values_from_controls(self) -> tuple[object, ...]:
+        fixed_text = self.fixed_parameters.get().strip() or "{}"
+        fixed = json.loads(fixed_text)
+        if not isinstance(fixed, dict) or not all(
+            isinstance(name, str)
+            and isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            for name, value in fixed.items()
+        ):
+            raise ValueError("fixed parameters must be a JSON object of numeric values")
+
+        def optional_float(variable: tk.StringVar) -> float | str:
+            return float(variable.get()) if variable.get().strip() else ""
+
+        return (
+            float(self.peak_center.get()),
+            optional_float(self.peak_left),
+            optional_float(self.peak_right),
+            self.component_model.get(),
+            optional_float(self.center_lower),
+            optional_float(self.center_upper),
+            optional_float(self.width_lower),
+            optional_float(self.width_upper),
+            json.dumps(fixed, sort_keys=True),
+            self.shared_width_group.get().strip(),
+            self.shared_width_parameter.get().strip(),
+        )
+
     def add_peak(self) -> None:
         try:
-            center = float(self.peak_center.get())
-            left = float(self.peak_left.get()) if self.peak_left.get().strip() else ""
-            right = float(self.peak_right.get()) if self.peak_right.get().strip() else ""
-            self.peak_tree.insert("", tk.END, values=(center, left, right))
-        except ValueError as exc:
+            self.peak_tree.insert("", tk.END, values=self._peak_values_from_controls())
+        except (json.JSONDecodeError, ValueError) as exc:
             messagebox.showerror("Invalid peak", str(exc))
 
     def update_peak(self) -> None:
@@ -285,11 +405,8 @@ class TpxLabApp(ttk.Frame):
             messagebox.showerror("Update peak", "select a peak first")
             return
         try:
-            center = float(self.peak_center.get())
-            left = float(self.peak_left.get()) if self.peak_left.get().strip() else ""
-            right = float(self.peak_right.get()) if self.peak_right.get().strip() else ""
-            self.peak_tree.item(selected[0], values=(center, left, right))
-        except ValueError as exc:
+            self.peak_tree.item(selected[0], values=self._peak_values_from_controls())
+        except (json.JSONDecodeError, ValueError) as exc:
             messagebox.showerror("Invalid peak", str(exc))
 
     def remove_peak(self) -> None:
@@ -302,10 +419,30 @@ class TpxLabApp(ttk.Frame):
             values = self.peak_tree.item(selected[0], "values")
             if isinstance(values, str):
                 return
-            center, left, right = values
+            (
+                center,
+                left,
+                right,
+                model,
+                center_lower,
+                center_upper,
+                width_lower,
+                width_upper,
+                fixed_parameters,
+                shared_width_group,
+                shared_width_parameter,
+            ) = values
             self.peak_center.set(str(center))
             self.peak_left.set(str(left))
             self.peak_right.set(str(right))
+            self.component_model.set(str(model))
+            self.center_lower.set(str(center_lower))
+            self.center_upper.set(str(center_upper))
+            self.width_lower.set(str(width_lower))
+            self.width_upper.set(str(width_upper))
+            self.fixed_parameters.set(str(fixed_parameters))
+            self.shared_width_group.set(str(shared_width_group))
+            self.shared_width_parameter.set(str(shared_width_parameter))
 
     def run_analysis(self) -> None:
         try:
@@ -317,9 +454,17 @@ class TpxLabApp(ttk.Frame):
                 for peak in self.result.quantified_peaks
             )
             quantity_status = f" Quantification: {quantities}." if quantities else ""
+            fit_status = ""
+            if self.result.global_fit is not None:
+                diagnostics = self.result.global_fit
+                fit_status = (
+                    f" Global R²={diagnostics.statistics.r_squared:.5g}; "
+                    f"rank={diagnostics.jacobian_rank}/{diagnostics.n_free_parameters}; "
+                    f"identifiable={diagnostics.identifiable}."
+                )
             self.status.set(
                 f"Fit {len(self.result.fits)} peaks; {len(self.result.qc_issues)} QC issues."
-                f"{quantity_status}"
+                f"{fit_status}{quantity_status}"
             )
         except (TypeError, ValueError, RuntimeError) as exc:
             messagebox.showerror("Analysis failed", str(exc))

@@ -12,6 +12,8 @@ from numpy.typing import NDArray
 FloatArray = NDArray[np.float64]
 BaselineMethod = Literal["linear", "polynomial", "als"]
 PeakModel = Literal["gaussian", "lorentzian", "voigt"]
+FitMode = Literal["independent", "global"]
+SharedWidthParameter = Literal["sigma", "gamma"]
 IntegrationMethod = Literal["trapezoid", "simpson"]
 
 
@@ -45,11 +47,27 @@ class RawData:
 
 @dataclass(frozen=True)
 class PeakSeed:
-    """User-editable initial peak definition in temperature coordinates."""
+    """User-editable component definition in temperature coordinates.
+
+    ``left`` and ``right`` define the integration/reporting region. Global fitting
+    uses separate center and width bounds so overlapping components can share the
+    same measured interval without conflating integration and optimizer constraints.
+    """
 
     center: float
     left: float | None = None
     right: float | None = None
+    model: PeakModel | None = None
+    center_lower: float | None = None
+    center_upper: float | None = None
+    width_lower: float | None = None
+    width_upper: float | None = None
+    fixed_parameters: Mapping[str, float] = field(default_factory=dict)
+    shared_width_group: str | None = None
+    shared_width_parameter: SharedWidthParameter | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "fixed_parameters", dict(self.fixed_parameters))
 
 
 @dataclass(frozen=True)
@@ -81,11 +99,35 @@ class PeakFit:
     standard_errors: Mapping[str, float]
     covariance: FloatArray
     statistics: FitStatistics
+    statistics_scope: Literal["component", "global"] = "component"
+    uncertainty_status: str = "available"
+    at_boundary: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "covariance", _immutable_float_array(self.covariance))
         object.__setattr__(self, "parameters", dict(self.parameters))
         object.__setattr__(self, "standard_errors", dict(self.standard_errors))
+
+
+@dataclass(frozen=True)
+class GlobalFitDiagnostics:
+    """Whole-model diagnostics for simultaneous component optimization."""
+
+    statistics: FitStatistics
+    n_observations: int
+    n_free_parameters: int
+    jacobian_rank: int
+    condition_number: float
+    identifiable: bool
+    uncertainty_status: str
+    optimizer_status: int
+    optimizer_message: str
+    parameter_order: tuple[str, ...]
+    active_bounds: tuple[str, ...]
+    covariance: FloatArray
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "covariance", _immutable_float_array(self.covariance))
 
 
 @dataclass(frozen=True)
@@ -96,6 +138,7 @@ class IntegratedPeak:
     right: float
     area: float
     method: IntegrationMethod
+    source: Literal["observed_region", "fitted_component"] = "observed_region"
 
 
 @dataclass(frozen=True)
@@ -118,6 +161,7 @@ class AnalysisSettings:
     peak_prominence: float | None = None
     peak_distance: int | None = None
     peak_model: PeakModel = "gaussian"
+    fit_mode: FitMode = "independent"
     integration_method: IntegrationMethod = "trapezoid"
     calibration_value: float | None = None
     calibration_unit: str | None = None
@@ -152,7 +196,21 @@ class AnalysisResult:
     qc_issues: tuple[QCIssue, ...]
     settings: AnalysisSettings
     fitted_signal: FloatArray = field(default_factory=lambda: np.array([], dtype=np.float64))
+    residual_signal: FloatArray = field(default_factory=lambda: np.array([], dtype=np.float64))
+    component_signals: tuple[FloatArray, ...] = ()
+    global_fit: GlobalFitDiagnostics | None = None
 
     def __post_init__(self) -> None:
-        for name in ("baseline", "corrected_signal", "processed_signal", "fitted_signal"):
+        for name in (
+            "baseline",
+            "corrected_signal",
+            "processed_signal",
+            "fitted_signal",
+            "residual_signal",
+        ):
             object.__setattr__(self, name, _immutable_float_array(getattr(self, name)))
+        object.__setattr__(
+            self,
+            "component_signals",
+            tuple(_immutable_float_array(values) for values in self.component_signals),
+        )

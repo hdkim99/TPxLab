@@ -7,7 +7,8 @@ from collections.abc import Sequence
 import numpy as np
 
 from tpxlab.baseline import estimate_baseline
-from tpxlab.integration import integrate_peaks
+from tpxlab.global_fit import fit_peaks_global
+from tpxlab.integration import integrate_component_signals, integrate_peaks
 from tpxlab.models import (
     AnalysisResult,
     AnalysisSettings,
@@ -17,7 +18,7 @@ from tpxlab.models import (
     QuantifiedPeak,
     RawData,
 )
-from tpxlab.peaks import detect_peaks, fit_peaks
+from tpxlab.peaks import detect_peaks, evaluate_peak, fit_peaks, peak_parameter_names
 from tpxlab.preprocessing import smooth_signal
 from tpxlab.quantification import quantify_peaks
 from tpxlab.validation import validate_raw_data
@@ -71,16 +72,69 @@ class AnalysisService:
         active_settings = settings or AnalysisSettings()
         prepared = self.prepare(raw, active_settings)
         active_seeds = tuple(seeds) if seeds is not None else self.detect(prepared, active_settings)
-        fits, fitted_signal = fit_peaks(
-            raw.temperature, prepared.processed_signal, active_seeds, active_settings.peak_model
-        )
-        integrated = integrate_peaks(
-            raw.time,
-            raw.temperature,
-            prepared.processed_signal,
-            active_seeds,
-            active_settings.integration_method,
-        )
+        global_diagnostics = None
+        if active_settings.fit_mode == "global":
+            global_result = fit_peaks_global(
+                raw.temperature,
+                prepared.processed_signal,
+                active_seeds,
+                active_settings.peak_model,
+            )
+            fits = global_result.fits
+            component_signals = global_result.component_signals
+            fitted_signal = global_result.combined_signal
+            residual_signal = global_result.residual_signal
+            global_diagnostics = global_result.diagnostics
+        elif active_settings.fit_mode == "independent":
+            if any(
+                seed.center_lower is not None
+                or seed.center_upper is not None
+                or seed.width_lower is not None
+                or seed.width_upper is not None
+                or bool(seed.fixed_parameters)
+                or seed.shared_width_group is not None
+                or seed.shared_width_parameter is not None
+                for seed in active_seeds
+            ):
+                raise ValueError(
+                    "center/width constraints and fixed/shared parameters require fit_mode='global'"
+                )
+            fits, fitted_signal = fit_peaks(
+                raw.temperature,
+                prepared.processed_signal,
+                active_seeds,
+                active_settings.peak_model,
+            )
+            component_signals = tuple(
+                evaluate_peak(
+                    raw.temperature,
+                    fit.model,
+                    [fit.parameters[name] for name in peak_parameter_names(fit.model)],
+                )
+                for fit in fits
+            )
+            residual_signal = np.asarray(
+                prepared.processed_signal - fitted_signal, dtype=np.float64
+            )
+        else:
+            raise ValueError(f"unsupported fit mode: {active_settings.fit_mode}")
+        if active_settings.fit_mode == "global":
+            integrated = integrate_component_signals(
+                raw.time,
+                raw.temperature,
+                component_signals,
+                active_seeds,
+                fits,
+                active_settings.integration_method,
+            )
+        else:
+            integrated = integrate_peaks(
+                raw.time,
+                raw.temperature,
+                prepared.processed_signal,
+                active_seeds,
+                active_settings.integration_method,
+            )
 
         calibration_fields = (
             active_settings.calibration_value,
@@ -120,17 +174,54 @@ class AnalysisService:
                         message=f"integrated area for peak {peak.peak_id} is negative",
                     )
                 )
-        for fit in fits:
-            if fit.statistics.r_squared < 0.9:
+        if global_diagnostics is not None:
+            if global_diagnostics.statistics.r_squared < 0.9:
                 issues.append(
                     QCIssue(
-                        code="POOR_PEAK_FIT",
+                        code="POOR_GLOBAL_FIT",
                         severity="warning",
                         message=(
-                            f"peak {fit.peak_id} has R-squared {fit.statistics.r_squared:.4g}"
+                            "global model has R-squared "
+                            f"{global_diagnostics.statistics.r_squared:.4g}"
                         ),
                     )
                 )
+            if not global_diagnostics.identifiable:
+                issues.append(
+                    QCIssue(
+                        code="NONIDENTIFIABLE_GLOBAL_FIT",
+                        severity="warning",
+                        message=(
+                            f"Jacobian rank {global_diagnostics.jacobian_rank} is below "
+                            f"{global_diagnostics.n_free_parameters} free parameters; "
+                            "parameter uncertainties are unavailable"
+                        ),
+                    )
+                )
+            if global_diagnostics.active_bounds:
+                issues.append(
+                    QCIssue(
+                        code="FIT_PARAMETER_AT_BOUND",
+                        severity="warning",
+                        message=(
+                            "optimizer solution reached bounds for: "
+                            + ", ".join(global_diagnostics.active_bounds)
+                        ),
+                    )
+                )
+        else:
+            for fit in fits:
+                if fit.statistics.r_squared < 0.9:
+                    issues.append(
+                        QCIssue(
+                            code="POOR_PEAK_FIT",
+                            severity="warning",
+                            message=(
+                                f"peak {fit.peak_id} has R-squared "
+                                f"{fit.statistics.r_squared:.4g}"
+                            ),
+                        )
+                    )
         for quantified_peak in quantified:
             if quantified_peak.value < 0:
                 issues.append(
@@ -154,4 +245,7 @@ class AnalysisService:
             qc_issues=tuple(issues),
             settings=active_settings,
             fitted_signal=fitted_signal,
+            residual_signal=residual_signal,
+            component_signals=component_signals,
+            global_fit=global_diagnostics,
         )

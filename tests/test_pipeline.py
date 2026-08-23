@@ -51,3 +51,43 @@ def test_user_seed_changes_actual_fit_region(gaussian_raw: RawData) -> None:
     assert result.fits[0].left == 350
     assert result.fits[0].right == 450
     assert result.seeds[0].center == 398
+
+
+@pytest.mark.scientific
+def test_global_pipeline_preserves_components_diagnostics_and_integration_source(
+    gaussian_raw: RawData,
+) -> None:
+    before = gaussian_raw.signal.copy()
+    settings = AnalysisSettings(
+        baseline_method="linear",
+        fit_mode="global",
+        peak_model="gaussian",
+    )
+    seed = PeakSeed(
+        center=398,
+        center_lower=380,
+        center_upper=420,
+        width_lower=5,
+        width_upper=40,
+    )
+    result = AnalysisService().analyze(gaussian_raw, settings, [seed])
+
+    assert np.array_equal(gaussian_raw.signal, before)
+    assert result.global_fit is not None
+    assert result.global_fit.identifiable
+    assert result.fits[0].statistics_scope == "global"
+    assert len(result.component_signals) == 1
+    assert np.allclose(result.processed_signal - result.fitted_signal, result.residual_signal)
+    assert result.integrated_peaks[0].source == "fitted_component"
+
+
+def test_independent_mode_does_not_silently_ignore_global_constraints(
+    gaussian_raw: RawData,
+) -> None:
+    seed = PeakSeed(400, 300, 500, fixed_parameters={"sigma": 18})
+    with pytest.raises(ValueError, match="require fit_mode='global'"):
+        AnalysisService().analyze(
+            gaussian_raw,
+            AnalysisSettings(baseline_method="linear", fit_mode="independent"),
+            [seed],
+        )

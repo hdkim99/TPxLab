@@ -139,6 +139,37 @@ def _fwhm(model: PeakModel, parameters: NDArray[np.float64]) -> float:
     return float(0.5346 * lorentz_width + np.sqrt(0.2166 * lorentz_width**2 + gaussian_width**2))
 
 
+def peak_parameter_names(model: PeakModel) -> tuple[str, ...]:
+    """Return the canonical, stable parameter ordering for a peak model."""
+
+    if model in ("gaussian", "lorentzian"):
+        return ("area", "center", "sigma" if model == "gaussian" else "gamma")
+    if model == "voigt":
+        return ("area", "center", "sigma", "gamma")
+    raise ValueError(f"unsupported peak model: {model}")
+
+
+def evaluate_peak(
+    temperature: FloatArray, model: PeakModel, parameters: FloatArray | Sequence[float]
+) -> FloatArray:
+    """Evaluate one area-normalized component using canonical parameter order."""
+
+    values = tuple(float(value) for value in parameters)
+    if model == "gaussian":
+        return gaussian(temperature, *values)
+    if model == "lorentzian":
+        return lorentzian(temperature, *values)
+    if model == "voigt":
+        return voigt(temperature, *values)
+    raise ValueError(f"unsupported peak model: {model}")
+
+
+def peak_fwhm(model: PeakModel, parameters: FloatArray | Sequence[float]) -> float:
+    """Calculate analytic/standard approximate FWHM for one component."""
+
+    return _fwhm(model, np.asarray(parameters, dtype=np.float64))
+
+
 def fit_peaks(
     temperature: FloatArray,
     signal: FloatArray,
@@ -160,7 +191,10 @@ def fit_peaks(
         sort_order = np.argsort(region_x)
         region_x = region_x[sort_order]
         region_y = region_y[sort_order]
-        function, initial, bounds, names = _model_spec(model, region_x, region_y, seed.center)
+        active_model = seed.model or model
+        function, initial, bounds, names = _model_spec(
+            active_model, region_x, region_y, seed.center
+        )
         fitted, covariance = curve_fit(
             function,
             region_x,
@@ -183,11 +217,11 @@ def fit_peaks(
         fits.append(
             PeakFit(
                 peak_id=peak_id,
-                model=model,
+                model=active_model,
                 center=center,
                 area=float(fitted[0]),
                 height=peak_height,
-                fwhm=_fwhm(model, fitted),
+                fwhm=_fwhm(active_model, fitted),
                 left=left,
                 right=right,
                 parameters=parameters,

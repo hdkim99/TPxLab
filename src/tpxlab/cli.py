@@ -8,11 +8,13 @@ from pathlib import Path
 from typing import cast
 
 from tpxlab import __version__
+from tpxlab.configuration import load_component_configuration
 from tpxlab.export import export_bundle
 from tpxlab.io import ColumnMapping, load_raw_data
 from tpxlab.models import (
     AnalysisSettings,
     BaselineMethod,
+    FitMode,
     IntegrationMethod,
     PeakModel,
     PeakSeed,
@@ -51,6 +53,16 @@ def _parser() -> argparse.ArgumentParser:
     analyze.add_argument("--prominence", type=float)
     analyze.add_argument("--distance", type=int)
     analyze.add_argument("--model", choices=("gaussian", "lorentzian", "voigt"), default="gaussian")
+    analyze.add_argument(
+        "--fit-mode",
+        choices=("independent", "global"),
+        help="independent bounded fits or one simultaneous global residual",
+    )
+    analyze.add_argument(
+        "--components-config",
+        type=Path,
+        help="strict org.tpxlab.components/0.2-draft JSON component constraints",
+    )
     analyze.add_argument("--integration", choices=("trapezoid", "simpson"), default="trapezoid")
     analyze.add_argument(
         "--peak-center",
@@ -89,6 +101,19 @@ def _mapping(args: argparse.Namespace) -> ColumnMapping | None:
 
 
 def _analyze(args: argparse.Namespace) -> int:
+    component_configuration = (
+        load_component_configuration(args.components_config)
+        if args.components_config is not None
+        else None
+    )
+    if component_configuration is not None and args.peak_center:
+        raise ValueError("--components-config and --peak-center cannot be used together")
+    fit_mode = cast(
+        FitMode,
+        args.fit_mode
+        or (component_configuration.fit_mode if component_configuration is not None else None)
+        or "independent",
+    )
     raw = load_raw_data(
         args.input,
         _mapping(args),
@@ -109,6 +134,7 @@ def _analyze(args: argparse.Namespace) -> int:
         peak_prominence=args.prominence,
         peak_distance=args.distance,
         peak_model=cast(PeakModel, args.model),
+        fit_mode=fit_mode,
         integration_method=cast(IntegrationMethod, args.integration),
         calibration_value=args.calibration_value,
         calibration_unit=args.calibration_unit,
@@ -116,8 +142,8 @@ def _analyze(args: argparse.Namespace) -> int:
         sample_mass_unit=args.sample_mass_unit,
         quantification_unit=args.quantification_unit,
     )
-    seeds = None
-    if args.peak_center:
+    seeds = component_configuration.components if component_configuration is not None else None
+    if component_configuration is None and args.peak_center:
         seeds = tuple(PeakSeed(center=value) for value in args.peak_center)
     result = AnalysisService().analyze(raw, settings, seeds)
     destination = export_bundle(result, args.output)
