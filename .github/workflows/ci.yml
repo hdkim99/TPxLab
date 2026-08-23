@@ -17,8 +17,11 @@ concurrency:
 jobs:
   required:
     name: CI / required
-    # Never execute untrusted fork code on the public repository's self-hosted DGX.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only owner-authored same-repository PRs may execute on the persistent DGX.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.actor == github.repository_owner &&
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: [self-hosted, dgx-spark]
     timeout-minutes: 60
     env:
