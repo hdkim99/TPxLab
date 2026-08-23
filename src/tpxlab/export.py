@@ -105,6 +105,7 @@ def result_tables(result: AnalysisResult) -> dict[str, pd.DataFrame]:
             {"metric": "rank_tolerance", "value": diagnostics.rank_tolerance},
             {"metric": "condition_number", "value": diagnostics.condition_number},
             {"metric": "identifiable", "value": diagnostics.identifiable},
+            {"metric": "covariance_valid", "value": diagnostics.covariance_valid},
             {"metric": "uncertainty_status", "value": diagnostics.uncertainty_status},
             {"metric": "optimizer_status", "value": diagnostics.optimizer_status},
             {"metric": "optimizer_message", "value": diagnostics.optimizer_message},

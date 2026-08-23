@@ -198,6 +198,17 @@ class AnalysisService:
                         ),
                     )
                 )
+            elif not global_diagnostics.covariance_valid:
+                issues.append(
+                    QCIssue(
+                        code="INVALID_GLOBAL_COVARIANCE",
+                        severity="warning",
+                        message=(
+                            "global Jacobian is full rank but its covariance is non-finite "
+                            "or not positive semidefinite; uncertainties are unavailable"
+                        ),
+                    )
+                )
             if global_diagnostics.active_bounds:
                 issues.append(
                     QCIssue(

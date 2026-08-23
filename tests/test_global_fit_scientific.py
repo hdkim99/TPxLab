@@ -53,6 +53,12 @@ def test_global_noiseless_fit_recovers_two_overlapping_gaussians() -> None:
     assert result.diagnostics.statistics.r_squared == pytest.approx(1.0, abs=1e-12)
     assert result.diagnostics.jacobian_rank == result.diagnostics.n_free_parameters == 6
     assert result.diagnostics.identifiable
+    assert result.diagnostics.covariance_valid
+    covariance_eigenvalues = np.linalg.eigvalsh(result.diagnostics.covariance)
+    covariance_tolerance = np.sqrt(np.finfo(float).eps) * max(
+        float(np.max(np.abs(covariance_eigenvalues))), np.finfo(float).tiny
+    )
+    assert np.min(covariance_eigenvalues) >= -covariance_tolerance
     assert result.diagnostics.parameter_order == (
         "component.1.area",
         "component.1.center",
@@ -214,6 +220,7 @@ def test_rank_deficiency_is_reported_without_invented_uncertainty() -> None:
     assert result.diagnostics.n_free_parameters == 2
     assert result.diagnostics.rank_tolerance > 0
     assert not result.diagnostics.identifiable
+    assert not result.diagnostics.covariance_valid
     assert "rank-deficient" in result.diagnostics.uncertainty_status
     assert np.isnan(result.diagnostics.covariance).all()
     assert all(np.isnan(fit.standard_errors["area"]) for fit in result.fits)

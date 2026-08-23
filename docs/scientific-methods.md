@@ -50,13 +50,20 @@ and Voigt components are allowed. Free-vector ordering is deterministic and expo
 
 The complete model reports RSS, RMSE, R², observations, free-parameter count, degrees of
 freedom, Jacobian rank and condition number, active bounds, optimizer status, and the
-global covariance matrix. Covariance is `RSS/dof * (J.T J)^-1` only for a full-rank
-Jacobian with positive degrees of freedom. Rank deficiency or inversion failure yields
-explicit unavailable (NaN) uncertainties. A bound-active result is labeled
+global covariance matrix. Covariance is mathematically `RSS/dof * (J.T J)^-1` and is
+computed only for a full-rank Jacobian with positive degrees of freedom. Rank deficiency
+or invalid covariance validation yields explicit unavailable (NaN) uncertainties. A
+bound-active result is labeled
 boundary-limited because an unconstrained local covariance can be misleading there.
 Numerical rank uses singular values above
 `sqrt(machine epsilon) * largest singular value`; this finite-difference-aware cutoff is
 included in exports as `rank_tolerance`.
+
+The implementation constructs covariance from the Jacobian SVD rather than directly
+inverting `J.T J`, symmetrizes it, and verifies finite positive-semidefinite eigenvalues
+within a `sqrt(machine epsilon)` relative tolerance. Numerically valid tiny negative
+eigenvalues are clipped to zero; an invalid covariance is exported as NaN with
+`covariance_valid = false` and an explicit QC issue.
 
 These diagnostics describe local numerical identifiability; they do not prove unique
 physical interpretation. Closely coincident components, weak components, excessive model

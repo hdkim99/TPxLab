@@ -120,6 +120,7 @@ class GlobalFitDiagnostics:
     rank_tolerance: float
     condition_number: float
     identifiable: bool
+    covariance_valid: bool
     uncertainty_status: str
     optimizer_status: int
     optimizer_message: str

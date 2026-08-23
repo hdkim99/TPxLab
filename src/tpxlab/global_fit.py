@@ -270,6 +270,7 @@ def fit_peaks_global(
             rank_tolerance=0.0,
             condition_number=np.nan,
             identifiable=True,
+            covariance_valid=True,
             uncertainty_status="no components",
             optimizer_status=0,
             optimizer_message="no components were supplied",
@@ -343,24 +344,36 @@ def fit_peaks_global(
     )
 
     jacobian = np.asarray(optimized.jac, dtype=np.float64)
-    singular_values = np.linalg.svd(jacobian, compute_uv=False)
+    _, singular_values, right_singular_vectors = np.linalg.svd(jacobian, full_matrices=False)
     rank_tolerance = float(np.sqrt(np.finfo(float).eps) * singular_values[0])
     rank = int(np.count_nonzero(singular_values > rank_tolerance))
     identifiable = rank == n_free
     condition_number = (
         float(singular_values[0] / singular_values[-1]) if singular_values[-1] > 0 else np.inf
     )
-    covariance_failure = False
+    covariance_valid = False
     if identifiable:
-        try:
-            covariance = np.asarray(
-                np.linalg.inv(jacobian.T @ jacobian) * rss / degrees_of_freedom,
-                dtype=np.float64,
-            )
-        except np.linalg.LinAlgError:
+        inverse_squared = 1.0 / singular_values**2
+        covariance = np.asarray(
+            (right_singular_vectors.T * inverse_squared)
+            @ right_singular_vectors
+            * rss
+            / degrees_of_freedom,
+            dtype=np.float64,
+        )
+        covariance = np.asarray((covariance + covariance.T) / 2, dtype=np.float64)
+        if np.all(np.isfinite(covariance)):
+            eigenvalues, eigenvectors = np.linalg.eigh(covariance)
+            eigenvalue_scale = max(float(np.max(np.abs(eigenvalues))), np.finfo(float).tiny)
+            psd_tolerance = np.sqrt(np.finfo(float).eps) * eigenvalue_scale
+            covariance_valid = bool(np.min(eigenvalues) >= -psd_tolerance)
+            if covariance_valid:
+                covariance = np.asarray(
+                    (eigenvectors * np.maximum(eigenvalues, 0.0)) @ eigenvectors.T,
+                    dtype=np.float64,
+                )
+        if not covariance_valid:
             covariance = np.full((n_free, n_free), np.nan, dtype=np.float64)
-            covariance_failure = True
-            identifiable = False
     else:
         covariance = np.full((n_free, n_free), np.nan, dtype=np.float64)
     active_names: list[str] = []
@@ -382,15 +395,12 @@ def fit_peaks_global(
         if scipy_active or numerically_active:
             active_names.append(name)
     active_bounds = tuple(active_names)
-    if covariance_failure:
-        uncertainty_status = "unavailable: covariance matrix inversion failed"
-    elif not identifiable:
+    if not identifiable:
         uncertainty_status = "unavailable: rank-deficient Jacobian"
+    elif not covariance_valid:
+        uncertainty_status = "unavailable: covariance is non-finite or not positive semidefinite"
     elif active_bounds:
         uncertainty_status = "boundary-limited: local covariance may be unreliable"
-    elif not np.all(np.isfinite(covariance)):
-        uncertainty_status = "unavailable: non-finite covariance"
-        identifiable = False
     else:
         uncertainty_status = "available: local linearized covariance"
 
@@ -461,6 +471,7 @@ def fit_peaks_global(
         rank_tolerance=rank_tolerance,
         condition_number=condition_number,
         identifiable=identifiable,
+        covariance_valid=covariance_valid,
         uncertainty_status=uncertainty_status,
         optimizer_status=int(optimized.status),
         optimizer_message=str(optimized.message),
