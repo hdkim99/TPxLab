@@ -3,6 +3,7 @@
 > Reproducible global deconvolution and quantification of temperature-programmed catalyst data.
 
 [![CI](https://github.com/hdkim99/TPxLab/actions/workflows/ci.yml/badge.svg)](https://github.com/hdkim99/TPxLab/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/tpxlab)](https://pypi.org/project/tpxlab/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hdkim99/TPxLab/blob/main/LICENSE)
 
@@ -35,14 +36,17 @@ not a mock interface.
 
 ## 30-second global quickstart
 
-For the bundled overlapping example in a source checkout:
+Download the public-safe example files and run them with the PyPI installation:
 
 ```bash
-tpxlab analyze examples/overlapping_tpr.csv \
-  --components-config examples/overlapping_components.json \
+mkdir tpxlab-demo && cd tpxlab-demo
+curl -LO https://raw.githubusercontent.com/hdkim99/TPxLab/main/examples/overlapping_tpr.csv
+curl -LO https://raw.githubusercontent.com/hdkim99/TPxLab/main/examples/overlapping_components.json
+tpxlab analyze overlapping_tpr.csv \
+  --components-config overlapping_components.json \
   --baseline linear \
-  --output examples/output/global-analysis.xlsx \
-  --figure examples/output/global-analysis.png
+  --output global-analysis.xlsx \
+  --figure global-analysis.png
 
 tpxlab-gui
 ```
@@ -51,6 +55,17 @@ The GUI follows: load and map columns/units -> baseline and detect -> add/update
 components -> choose model, center/width bounds, fixed/shared width constraints -> fit and
 quantify -> inspect components/total/residual -> export. Every edit is passed through the
 service to the same scientific core used by the CLI.
+
+## Selected public real-data validation
+
+TPxLab has been exercised against selected raw H2-TPR acquisition CSVs from
+[Zenodo DOI 10.5281/zenodo.21884075](https://doi.org/10.5281/zenodo.21884075).
+The validation covers measured time/temperature/TCD columns, negative detector
+polarity, non-monotonic segments, constrained global fitting, diagnostics, and
+export. It does **not** claim calibrated H2 consumption because the source does
+not provide an absolute detector calibration. Dataset/article licenses,
+checksums, exact files, protocol discrepancies, reproduction commands, and
+limitations are recorded in [Public data sources](https://github.com/hdkim99/TPxLab/blob/main/docs/public-data-sources.md).
 
 ## Python API
 

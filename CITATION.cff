@@ -3,6 +3,7 @@ message: "If you use TPxLab in published work, please cite the software."
 title: "TPxLab"
 type: software
 version: 0.2.2
+date-released: 2026-08-23
 authors:
   - family-names: "Kim"
     given-names: "Hyun Dong"
