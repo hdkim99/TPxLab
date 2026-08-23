@@ -9,7 +9,7 @@ from pint import UnitRegistry
 
 from tpxlab.models import QCIssue, RawData
 
-_UREG: UnitRegistry[Any] = UnitRegistry(autoconvert_offset_to_baseunit=True)
+_UREG: Any = UnitRegistry(autoconvert_offset_to_baseunit=True)
 
 
 class DataValidationError(ValueError):

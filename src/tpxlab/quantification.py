@@ -10,7 +10,7 @@ from pint import DimensionalityError, UnitRegistry
 
 from tpxlab.models import IntegratedPeak, QuantifiedPeak
 
-UREG: UnitRegistry[Any] = UnitRegistry(autoconvert_offset_to_baseunit=True)
+UREG: Any = UnitRegistry(autoconvert_offset_to_baseunit=True)
 
 
 class QuantificationError(ValueError):

@@ -8,6 +8,8 @@ method of Eilers and Boelens using a second-difference smoothness penalty.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from numpy.typing import NDArray
 from scipy import sparse
@@ -98,13 +100,17 @@ def als_baseline(
         format="csc",
     )
     penalty = smoothness * (second_difference.T @ second_difference)
-    weights = np.ones(size, dtype=np.float64)
-    baseline = np.array(signal, dtype=np.float64, copy=True)
+    weight_state: list[FloatArray] = [np.ones(size, dtype=np.float64)]
+    baseline_state: list[FloatArray] = [np.zeros(size, dtype=np.float64)]
     for _ in range(iterations):
+        weights = weight_state[0]
         weight_matrix = sparse.spdiags(weights, 0, size, size)
-        baseline = np.asarray(spsolve(weight_matrix + penalty, weights * signal), dtype=np.float64)
-        weights = np.where(signal > baseline, asymmetry, 1.0 - asymmetry)
-    return baseline
+        solved = spsolve(weight_matrix + penalty, weights * signal)
+        baseline = cast(FloatArray, np.asarray(solved, dtype=np.float64).reshape(size))
+        updated_weights = cast(FloatArray, np.where(signal > baseline, asymmetry, 1.0 - asymmetry))
+        weight_state[0] = updated_weights
+        baseline_state[0] = baseline
+    return baseline_state[0]
 
 
 def estimate_baseline(
