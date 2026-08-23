@@ -1,0 +1,61 @@
+name: Publish release to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install GUI system dependency
+        run: sudo apt-get update && sudo apt-get install -y xvfb python3-tk
+      - name: Validate tag, build, and smoke-test distributions
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python -m pip install --upgrade pip build twine
+          PACKAGE_VERSION="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "v${PACKAGE_VERSION}" = "${RELEASE_TAG}"
+          python -m build
+          python -m twine check dist/*
+          python -m venv "${RUNNER_TEMP}/tpxlab-release-venv"
+          "${RUNNER_TEMP}/tpxlab-release-venv/bin/python" -m pip install dist/*.whl
+          "${RUNNER_TEMP}/tpxlab-release-venv/bin/python" -m pip check
+          "${RUNNER_TEMP}/tpxlab-release-venv/bin/python" -c "import tpxlab; assert tpxlab.__version__ == '${PACKAGE_VERSION}'"
+          "${RUNNER_TEMP}/tpxlab-release-venv/bin/tpxlab" --help
+          "${RUNNER_TEMP}/tpxlab-release-venv/bin/tpxlab" analyze examples/overlapping_tpr.csv --components-config examples/overlapping_components.json --baseline linear --output "${RUNNER_TEMP}/tpxlab-release-smoke.xlsx"
+          xvfb-run -a "${RUNNER_TEMP}/tpxlab-release-venv/bin/tpxlab-gui" --smoke-test
+          PYTHONPATH=src xvfb-run -a "${RUNNER_TEMP}/tpxlab-release-venv/bin/python" tests/gui_widget_smoke.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pypi-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tpxlab
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: pypi-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
