@@ -102,6 +102,7 @@ def result_tables(result: AnalysisResult) -> dict[str, pd.DataFrame]:
             {"metric": "n_observations", "value": diagnostics.n_observations},
             {"metric": "n_free_parameters", "value": diagnostics.n_free_parameters},
             {"metric": "jacobian_rank", "value": diagnostics.jacobian_rank},
+            {"metric": "rank_tolerance", "value": diagnostics.rank_tolerance},
             {"metric": "condition_number", "value": diagnostics.condition_number},
             {"metric": "identifiable", "value": diagnostics.identifiable},
             {"metric": "uncertainty_status", "value": diagnostics.uncertainty_status},

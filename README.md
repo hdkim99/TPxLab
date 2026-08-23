@@ -130,8 +130,8 @@ sheets; a directory destination writes the same layers as CSV. Exports include o
 channels, component curves, total curve, residual, exact constraints, parameter ordering,
 component parameters/Tmax/area/height/FWHM, local standard errors, component and global
 covariance, RSS/RMSE/R²/dof, Jacobian rank, condition number, optimizer status, active
-bounds, integration source, units, source file, and QC issues. PNG/SVG/PDF figures include
-raw/baseline, components/total, and residual.
+bounds, numerical rank tolerance, integration source, units, source file, and QC issues.
+PNG/SVG/PDF figures include raw/baseline, components/total, and residual.
 
 ## Scientific scope and limitations
 

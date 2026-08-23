@@ -267,6 +267,7 @@ def fit_peaks_global(
             n_observations=len(y),
             n_free_parameters=0,
             jacobian_rank=0,
+            rank_tolerance=0.0,
             condition_number=np.nan,
             identifiable=True,
             uncertainty_status="no components",
@@ -342,9 +343,13 @@ def fit_peaks_global(
     )
 
     jacobian = np.asarray(optimized.jac, dtype=np.float64)
-    rank = int(np.linalg.matrix_rank(jacobian))
+    singular_values = np.linalg.svd(jacobian, compute_uv=False)
+    rank_tolerance = float(np.sqrt(np.finfo(float).eps) * singular_values[0])
+    rank = int(np.count_nonzero(singular_values > rank_tolerance))
     identifiable = rank == n_free
-    condition_number = float(np.linalg.cond(jacobian))
+    condition_number = (
+        float(singular_values[0] / singular_values[-1]) if singular_values[-1] > 0 else np.inf
+    )
     covariance_failure = False
     if identifiable:
         try:
@@ -453,6 +458,7 @@ def fit_peaks_global(
         n_observations=len(y),
         n_free_parameters=n_free,
         jacobian_rank=rank,
+        rank_tolerance=rank_tolerance,
         condition_number=condition_number,
         identifiable=identifiable,
         uncertainty_status=uncertainty_status,

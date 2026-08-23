@@ -212,6 +212,7 @@ def test_rank_deficiency_is_reported_without_invented_uncertainty() -> None:
 
     assert result.diagnostics.jacobian_rank == 1
     assert result.diagnostics.n_free_parameters == 2
+    assert result.diagnostics.rank_tolerance > 0
     assert not result.diagnostics.identifiable
     assert "rank-deficient" in result.diagnostics.uncertainty_status
     assert np.isnan(result.diagnostics.covariance).all()

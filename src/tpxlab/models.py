@@ -117,6 +117,7 @@ class GlobalFitDiagnostics:
     n_observations: int
     n_free_parameters: int
     jacobian_rank: int
+    rank_tolerance: float
     condition_number: float
     identifiable: bool
     uncertainty_status: str

@@ -54,6 +54,9 @@ global covariance matrix. Covariance is `RSS/dof * (J.T J)^-1` only for a full-r
 Jacobian with positive degrees of freedom. Rank deficiency or inversion failure yields
 explicit unavailable (NaN) uncertainties. A bound-active result is labeled
 boundary-limited because an unconstrained local covariance can be misleading there.
+Numerical rank uses singular values above
+`sqrt(machine epsilon) * largest singular value`; this finite-difference-aware cutoff is
+included in exports as `rank_tolerance`.
 
 These diagnostics describe local numerical identifiability; they do not prove unique
 physical interpretation. Closely coincident components, weak components, excessive model
