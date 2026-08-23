@@ -76,8 +76,25 @@ class TpxLabApp(ttk.Frame):
         self.status = tk.StringVar(value="Load a CSV or XLSX dataset.")
 
     def _build_controls(self) -> None:
-        controls = ttk.Frame(self)
-        controls.grid(row=0, column=0, sticky="nsw", padx=(0, 8))
+        controls_host = ttk.Frame(self)
+        controls_host.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        control_canvas = tk.Canvas(controls_host, width=390, highlightthickness=0)
+        control_scrollbar = ttk.Scrollbar(
+            controls_host, orient=tk.VERTICAL, command=control_canvas.yview
+        )
+        control_canvas.configure(yscrollcommand=control_scrollbar.set)
+        control_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        control_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        controls = ttk.Frame(control_canvas)
+        controls_window = control_canvas.create_window((0, 0), window=controls, anchor="nw")
+        controls.bind(
+            "<Configure>",
+            lambda _event: control_canvas.configure(scrollregion=control_canvas.bbox("all")),
+        )
+        control_canvas.bind(
+            "<Configure>",
+            lambda event: control_canvas.itemconfigure(controls_window, width=event.width),
+        )
         plot_frame = ttk.Frame(self)
         plot_frame.grid(row=0, column=1, sticky="nsew")
         self.plot_frame = plot_frame
@@ -129,11 +146,21 @@ class TpxLabApp(ttk.Frame):
             "shared_parameter",
         )
         self.peak_tree = ttk.Treeview(
-            controls, columns=peak_columns, show="headings", height=5
+            controls,
+            columns=peak_columns,
+            displaycolumns=(
+                "center",
+                "model",
+                "center_lower",
+                "center_upper",
+                "shared_group",
+            ),
+            show="headings",
+            height=5,
         )
         for name in peak_columns:
             self.peak_tree.heading(name, text=name.replace("_", " ").title())
-            self.peak_tree.column(name, width=78)
+            self.peak_tree.column(name, width=74, stretch=False)
         self.peak_tree.grid(row=14, column=0, columnspan=2, sticky="ew")
         self.peak_tree.bind("<<TreeviewSelect>>", self._load_selected_peak)
         self._labeled_entry(controls, 15, "Center", self.peak_center)
