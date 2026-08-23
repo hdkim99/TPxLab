@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 
-from tpxlab.models import AnalysisSettings, PeakSeed, RawData
+from tpxlab.models import AnalysisSettings, PeakPolarity, PeakSeed, RawData
+from tpxlab.peaks import gaussian
 from tpxlab.pipeline import AnalysisService
 
 
@@ -41,6 +44,46 @@ def test_pipeline_requires_complete_quantification_configuration(gaussian_raw: R
     settings = AnalysisSettings(baseline_method="linear", calibration_value=2)
     with pytest.raises(ValueError, match="supplied together"):
         AnalysisService().analyze(gaussian_raw, settings, [PeakSeed(400, 300, 500)])
+
+
+@pytest.mark.scientific
+def test_negative_peak_polarity_mirrors_positive_response_without_mutating_raw(
+    gaussian_raw: RawData,
+) -> None:
+    baseline = 0.2 + 0.0001 * gaussian_raw.time
+    peak = gaussian(gaussian_raw.temperature, area=120.0, center=400.0, sigma=18.0)
+    negative_raw = RawData(
+        time=gaussian_raw.time,
+        temperature=gaussian_raw.temperature,
+        signal=baseline - peak,
+        source="negative-going-detector",
+    )
+    before = negative_raw.signal.copy()
+    seed = PeakSeed(400, 300, 500)
+    positive = AnalysisService().analyze(
+        gaussian_raw,
+        AnalysisSettings(baseline_method="linear", peak_polarity="positive"),
+        [seed],
+    )
+    negative = AnalysisService().analyze(
+        negative_raw,
+        AnalysisSettings(baseline_method="linear", peak_polarity="negative"),
+        [seed],
+    )
+
+    assert np.array_equal(negative_raw.signal, before)
+    assert np.allclose(negative.baseline, baseline, atol=1e-10)
+    assert np.allclose(negative.corrected_signal, negative.baseline - negative.raw.signal)
+    assert np.allclose(negative.processed_signal, positive.processed_signal, atol=1e-10)
+    assert negative.integrated_peaks[0].area == pytest.approx(
+        positive.integrated_peaks[0].area, rel=1e-10
+    )
+
+
+def test_pipeline_rejects_unknown_peak_polarity(gaussian_raw: RawData) -> None:
+    settings = AnalysisSettings(peak_polarity=cast(PeakPolarity, "sideways"))
+    with pytest.raises(ValueError, match="unsupported peak polarity"):
+        AnalysisService().prepare(gaussian_raw, settings)
 
 
 def test_user_seed_changes_actual_fit_region(gaussian_raw: RawData) -> None:

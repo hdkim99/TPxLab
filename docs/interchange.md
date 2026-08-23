@@ -8,6 +8,8 @@ The tabular bundle preserves:
 
 - source path and original time/temperature/signal channels with units;
 - baseline, corrected, processed, per-component, total-fit, and residual arrays;
+- peak polarity, the exact detector-to-corrected transformation, and confirmation that the
+  baseline remains in original detector coordinates;
 - all analysis settings and component model/bound/fixed/shared constraints;
 - component parameters, local uncertainties/covariance, fitted and numerical areas;
 - global parameter order, covariance, fit statistics, Jacobian diagnostics, active bounds,

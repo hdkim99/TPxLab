@@ -15,6 +15,7 @@ PeakModel = Literal["gaussian", "lorentzian", "voigt"]
 FitMode = Literal["independent", "global"]
 SharedWidthParameter = Literal["sigma", "gamma"]
 IntegrationMethod = Literal["trapezoid", "simpson"]
+PeakPolarity = Literal["positive", "negative"]
 
 
 def _immutable_float_array(values: FloatArray) -> FloatArray:
@@ -170,6 +171,7 @@ class AnalysisSettings:
     sample_mass_value: float | None = None
     sample_mass_unit: str | None = None
     quantification_unit: str = "millimole / gram"
+    peak_polarity: PeakPolarity = "positive"
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from tpxlab.baseline import als_baseline, linear_baseline, polynomial_baseline
+from tpxlab.models import AnalysisSettings, RawData
+from tpxlab.pipeline import AnalysisService
 from tpxlab.preprocessing import smooth_signal
 
 
@@ -25,6 +27,25 @@ def test_als_tracks_constant_under_positive_peak() -> None:
     signal = 3 + 8 * np.exp(-(x**2))
     baseline = als_baseline(signal, smoothness=1e6, asymmetry=0.001, iterations=20)
     assert np.median(np.abs(baseline - 3)) < 0.08
+
+
+def test_als_tracks_original_coordinate_upper_baseline_for_negative_peak() -> None:
+    x = np.linspace(-5, 5, 301)
+    signal = 3 - 8 * np.exp(-(x**2))
+    raw = RawData(time=x + 5, temperature=x, signal=signal)
+    prepared = AnalysisService().prepare(
+        raw,
+        AnalysisSettings(
+            baseline_method="als",
+            peak_polarity="negative",
+            als_lambda=1e6,
+            als_asymmetry=0.001,
+            als_iterations=20,
+        ),
+    )
+    assert np.median(np.abs(prepared.baseline - 3)) < 0.08
+    assert prepared.processed_signal.max() > 7.9
+    assert np.allclose(prepared.corrected_signal, prepared.baseline - raw.signal)
 
 
 def test_smoothing_validates_window_and_does_not_mutate() -> None:

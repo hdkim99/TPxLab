@@ -27,7 +27,10 @@ class Status:
 def test_gui_run_passes_edited_seeds_and_settings_to_service(gaussian_raw) -> None:
     service = RecordingService()
     settings = AnalysisSettings(
-        baseline_method="linear", peak_model="lorentzian", fit_mode="global"
+        baseline_method="linear",
+        peak_polarity="negative",
+        peak_model="lorentzian",
+        fit_mode="global",
     )
     edited = (
         PeakSeed(
@@ -54,6 +57,7 @@ def test_gui_run_passes_edited_seeds_and_settings_to_service(gaussian_raw) -> No
     TpxLabApp.run_analysis(fake)
     assert service.received == (gaussian_raw, settings, edited)
     assert fake.result.settings.peak_model == "lorentzian"
+    assert fake.result.settings.peak_polarity == "negative"
     assert fake.result.settings.fit_mode == "global"
     assert fake.result.seeds == edited
     assert "Fit 1 peaks" in fake.status.value

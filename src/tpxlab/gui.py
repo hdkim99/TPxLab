@@ -23,6 +23,7 @@ from tpxlab.models import (
     BaselineMethod,
     FitMode,
     PeakModel,
+    PeakPolarity,
     PeakSeed,
     RawData,
     SharedWidthParameter,
@@ -54,6 +55,7 @@ class TpxLabApp(ttk.Frame):
         self.temperature_unit = tk.StringVar(value="degC")
         self.signal_unit = tk.StringVar(value="millivolt")
         self.baseline_method = tk.StringVar(value="als")
+        self.peak_polarity = tk.StringVar(value="positive")
         self.peak_model = tk.StringVar(value="gaussian")
         self.fit_mode = tk.StringVar(value="global")
         self.prominence = tk.StringVar()
@@ -116,20 +118,27 @@ class TpxLabApp(ttk.Frame):
         self._labeled_combo(
             controls, 8, "Baseline", self.baseline_method, ("linear", "polynomial", "als")
         )
-        self._labeled_entry(controls, 9, "Smooth window", self.smoothing_window)
-        self._labeled_entry(controls, 10, "Prominence", self.prominence)
         self._labeled_combo(
             controls,
-            11,
+            9,
+            "Peak polarity",
+            self.peak_polarity,
+            ("positive", "negative"),
+        )
+        self._labeled_entry(controls, 10, "Smooth window", self.smoothing_window)
+        self._labeled_entry(controls, 11, "Prominence", self.prominence)
+        self._labeled_combo(
+            controls,
+            12,
             "Fit mode",
             self.fit_mode,
             ("global", "independent"),
         )
         self._labeled_combo(
-            controls, 12, "Default model", self.peak_model, ("gaussian", "lorentzian", "voigt")
+            controls, 13, "Default model", self.peak_model, ("gaussian", "lorentzian", "voigt")
         )
         ttk.Button(controls, text="Prepare + detect", command=self.prepare_and_detect).grid(
-            row=13, column=0, columnspan=2, sticky="ew", pady=(6, 2)
+            row=14, column=0, columnspan=2, sticky="ew", pady=(6, 2)
         )
 
         peak_columns = (
@@ -161,55 +170,55 @@ class TpxLabApp(ttk.Frame):
         for name in peak_columns:
             self.peak_tree.heading(name, text=name.replace("_", " ").title())
             self.peak_tree.column(name, width=74, stretch=False)
-        self.peak_tree.grid(row=14, column=0, columnspan=2, sticky="ew")
+        self.peak_tree.grid(row=15, column=0, columnspan=2, sticky="ew")
         self.peak_tree.bind("<<TreeviewSelect>>", self._load_selected_peak)
-        self._labeled_entry(controls, 15, "Center", self.peak_center)
-        self._labeled_entry(controls, 16, "Integration left", self.peak_left)
-        self._labeled_entry(controls, 17, "Integration right", self.peak_right)
+        self._labeled_entry(controls, 16, "Center", self.peak_center)
+        self._labeled_entry(controls, 17, "Integration left", self.peak_left)
+        self._labeled_entry(controls, 18, "Integration right", self.peak_right)
         self._labeled_combo(
             controls,
-            18,
+            19,
             "Component model",
             self.component_model,
             ("gaussian", "lorentzian", "voigt"),
         )
-        self._labeled_entry(controls, 19, "Center lower", self.center_lower)
-        self._labeled_entry(controls, 20, "Center upper", self.center_upper)
-        self._labeled_entry(controls, 21, "Width lower", self.width_lower)
-        self._labeled_entry(controls, 22, "Width upper", self.width_upper)
-        self._labeled_entry(controls, 23, "Fixed params JSON", self.fixed_parameters)
-        self._labeled_entry(controls, 24, "Shared width group", self.shared_width_group)
+        self._labeled_entry(controls, 20, "Center lower", self.center_lower)
+        self._labeled_entry(controls, 21, "Center upper", self.center_upper)
+        self._labeled_entry(controls, 22, "Width lower", self.width_lower)
+        self._labeled_entry(controls, 23, "Width upper", self.width_upper)
+        self._labeled_entry(controls, 24, "Fixed params JSON", self.fixed_parameters)
+        self._labeled_entry(controls, 25, "Shared width group", self.shared_width_group)
         self._labeled_combo(
             controls,
-            25,
+            26,
             "Shared parameter",
             self.shared_width_parameter,
             ("", "sigma", "gamma"),
         )
         peak_buttons = ttk.Frame(controls)
-        peak_buttons.grid(row=26, column=0, columnspan=2, sticky="ew")
+        peak_buttons.grid(row=27, column=0, columnspan=2, sticky="ew")
         ttk.Button(peak_buttons, text="Add", command=self.add_peak).pack(side=tk.LEFT)
         ttk.Button(peak_buttons, text="Update", command=self.update_peak).pack(side=tk.LEFT)
         ttk.Button(peak_buttons, text="Remove", command=self.remove_peak).pack(side=tk.LEFT)
 
         ttk.Label(controls, text="Optional quantification").grid(
-            row=27, column=0, columnspan=2, sticky="w", pady=(8, 0)
+            row=28, column=0, columnspan=2, sticky="w", pady=(8, 0)
         )
-        self._labeled_entry(controls, 28, "Calibration", self.calibration_value)
-        self._labeled_entry(controls, 29, "Calibration unit", self.calibration_unit)
-        self._labeled_entry(controls, 30, "Sample mass", self.sample_mass_value)
-        self._labeled_entry(controls, 31, "Mass unit", self.sample_mass_unit)
+        self._labeled_entry(controls, 29, "Calibration", self.calibration_value)
+        self._labeled_entry(controls, 30, "Calibration unit", self.calibration_unit)
+        self._labeled_entry(controls, 31, "Sample mass", self.sample_mass_value)
+        self._labeled_entry(controls, 32, "Mass unit", self.sample_mass_unit)
         ttk.Button(controls, text="Fit + quantify", command=self.run_analysis).grid(
-            row=32, column=0, columnspan=2, sticky="ew", pady=(6, 2)
+            row=33, column=0, columnspan=2, sticky="ew", pady=(6, 2)
         )
         ttk.Button(controls, text="Export workbook", command=self.export_result).grid(
-            row=33, column=0, columnspan=2, sticky="ew"
-        )
-        ttk.Button(controls, text="Export figure", command=self.export_figure).grid(
             row=34, column=0, columnspan=2, sticky="ew"
         )
+        ttk.Button(controls, text="Export figure", command=self.export_figure).grid(
+            row=35, column=0, columnspan=2, sticky="ew"
+        )
         ttk.Label(controls, textvariable=self.status, wraplength=280).grid(
-            row=35, column=0, columnspan=2, sticky="w", pady=(8, 0)
+            row=36, column=0, columnspan=2, sticky="w", pady=(8, 0)
         )
 
     @staticmethod
@@ -294,6 +303,7 @@ class TpxLabApp(ttk.Frame):
         sample_mass_value = self.sample_mass_value.get().strip()
         return AnalysisSettings(
             baseline_method=cast(BaselineMethod, self.baseline_method.get()),
+            peak_polarity=cast(PeakPolarity, self.peak_polarity.get()),
             smoothing_window=(
                 int(self.smoothing_window.get()) if self.smoothing_window.get().strip() else None
             ),

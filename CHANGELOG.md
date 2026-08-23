@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 - 2026-08-23
+
+- Add explicit positive/negative peak polarity through API, CLI, GUI, preprocessing, and
+  exports while preserving raw signals and detector-coordinate baselines.
+- Add an opt-in, checksum-pinned validation of an actual public H2-TPR dataset without
+  vendoring source data or adding network access to the default test suite.
+
 ## 0.2.1 - 2026-08-23
 
 - Correct the PyPI installation instructions and public release status in the package

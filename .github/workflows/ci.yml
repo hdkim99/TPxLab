@@ -116,7 +116,7 @@ jobs:
           "${TPXLAB_CI_ROOT}/clean-venv/bin/python" -m pip install --upgrade pip
           "${TPXLAB_CI_ROOT}/clean-venv/bin/python" -m pip install "${TPXLAB_CI_ROOT}"/dist/*.whl
           "${TPXLAB_CI_ROOT}/clean-venv/bin/python" -m pip check
-          "${TPXLAB_CI_ROOT}/clean-venv/bin/python" -c "import tpxlab; assert tpxlab.__version__ == '0.2.1'"
+          "${TPXLAB_CI_ROOT}/clean-venv/bin/python" -c "import tpxlab; assert tpxlab.__version__ == '0.2.2'"
       - name: Exercise installed CLI, GUI, and example workflows
         run: |
           "${TPXLAB_CI_ROOT}/clean-venv/bin/tpxlab" --help

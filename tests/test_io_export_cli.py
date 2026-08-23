@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -9,6 +10,7 @@ from tpxlab.cli import main
 from tpxlab.export import export_csv_bundle, export_excel
 from tpxlab.io import ColumnMapping, auto_map_columns, load_raw_data
 from tpxlab.models import AnalysisSettings, PeakSeed
+from tpxlab.peaks import gaussian
 from tpxlab.pipeline import AnalysisService
 
 
@@ -59,6 +61,16 @@ def test_excel_and_csv_export_are_complete(tmp_path: Path, gaussian_raw) -> None
         "metadata.csv",
         "qc.csv",
     }
+    processed = pd.read_csv(bundle / "processed.csv")
+    settings = pd.read_csv(bundle / "settings.csv")
+    metadata = pd.read_csv(bundle / "metadata.csv")
+    assert np.allclose(processed["baseline"], result.baseline)
+    assert settings.loc[settings["parameter"] == "peak_polarity", "value"].item() == "positive"
+    assert metadata.loc[metadata["key"] == "peak_polarity", "value"].item() == "positive"
+    assert (
+        metadata.loc[metadata["key"] == "signal_transformation", "value"].item()
+        == "raw_signal - baseline"
+    )
 
 
 def test_cli_smoke_exports_real_workbook(tmp_path: Path) -> None:
@@ -82,3 +94,41 @@ def test_cli_smoke_exports_real_workbook(tmp_path: Path) -> None:
     assert status == 0
     assert output.stat().st_size > 5000
     assert figure.stat().st_size > 5000
+
+
+def test_cli_negative_polarity_reaches_core_and_export(tmp_path: Path) -> None:
+    temperature = np.linspace(200, 600, 801)
+    source = tmp_path / "negative.csv"
+    pd.DataFrame(
+        {
+            "time": np.linspace(0, 800, 801),
+            "temperature": temperature,
+            "signal": 0.3 - gaussian(temperature, 100, 400, 18),
+        }
+    ).to_csv(source, index=False)
+    output = tmp_path / "negative-result"
+    status = main(
+        [
+            "analyze",
+            str(source),
+            "--output",
+            str(output),
+            "--baseline",
+            "linear",
+            "--peak-polarity",
+            "negative",
+            "--peak-center",
+            "400",
+        ]
+    )
+    assert status == 0
+    processed = pd.read_csv(output / "processed.csv")
+    settings = pd.read_csv(output / "settings.csv")
+    metadata = pd.read_csv(output / "metadata.csv")
+    assert processed["processed_signal"].max() > 2
+    assert settings.loc[settings["parameter"] == "peak_polarity", "value"].item() == "negative"
+    assert metadata.loc[metadata["key"] == "peak_polarity", "value"].item() == "negative"
+    assert (
+        metadata.loc[metadata["key"] == "signal_transformation", "value"].item()
+        == "baseline - raw_signal"
+    )

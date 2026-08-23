@@ -18,6 +18,20 @@ sheet in an export therefore contains the values received by the analysis servic
 
 No baseline is universally correct. Inspect the raw/baseline plot and exported settings.
 
+## Peak polarity
+
+Peak models use positive areas, but detector responses can point in either direction.
+`peak_polarity` is therefore an explicit analysis setting:
+
+- `positive`: `corrected = raw signal - baseline`;
+- `negative`: `corrected = baseline - raw signal`.
+
+For negative peaks, baseline estimation is performed in an oriented detector coordinate
+(`-raw signal`) and the resulting baseline is restored to the original coordinates. This
+makes ALS track the upper envelope while preserving the original detector-valued baseline
+for figures and exports. Raw arrays are never sign-flipped or overwritten. Settings and
+metadata record the polarity, exact transformation, and baseline coordinate system.
+
 ## Smoothing and detection
 
 Optional smoothing is SciPy's Savitzky-Golay filter with an explicitly validated odd
@@ -111,3 +125,7 @@ components, mixed model families, scaling, fixed/shared constraints, invalid bou
 rank deficiency, insufficient degrees of freedom, boundary uncertainty, sampling-density
 stability, irregular-time integration, unit scaling/dimensional errors, raw immutability,
 GUI/service call paths, export provenance, and explicit stoichiometry.
+
+The opt-in public-data validation described in
+[`public-data-sources.md`](public-data-sources.md) checks an immutable Zenodo source archive
+without vendoring it or adding network access to normal pytest.

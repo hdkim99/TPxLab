@@ -19,6 +19,11 @@ from tpxlab.models import (
     RawData,
 )
 from tpxlab.peaks import detect_peaks, evaluate_peak, fit_peaks, peak_parameter_names
+from tpxlab.polarity import (
+    correct_detector_signal,
+    orient_detector_signal,
+    restore_detector_baseline,
+)
 from tpxlab.preprocessing import smooth_signal
 from tpxlab.quantification import quantify_peaks
 from tpxlab.validation import validate_raw_data
@@ -31,9 +36,10 @@ class AnalysisService:
         """Validate, baseline-correct, and optionally smooth without mutating raw data."""
 
         issues = validate_raw_data(raw)
-        baseline = estimate_baseline(
+        oriented_signal = orient_detector_signal(raw.signal, settings.peak_polarity)
+        oriented_baseline = estimate_baseline(
             raw.time,
-            raw.signal,
+            oriented_signal,
             settings.baseline_method,
             polynomial_degree=settings.polynomial_degree,
             endpoint_fraction=settings.endpoint_fraction,
@@ -41,7 +47,8 @@ class AnalysisService:
             als_asymmetry=settings.als_asymmetry,
             als_iterations=settings.als_iterations,
         )
-        corrected = np.asarray(raw.signal - baseline, dtype=np.float64)
+        baseline = restore_detector_baseline(oriented_baseline, settings.peak_polarity)
+        corrected = correct_detector_signal(raw.signal, baseline, settings.peak_polarity)
         processed = smooth_signal(corrected, settings.smoothing_window, settings.smoothing_order)
         return PreparedData(
             raw=raw,

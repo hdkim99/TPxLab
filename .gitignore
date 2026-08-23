@@ -4,10 +4,10 @@
 .pytest_cache/
 .ruff_cache/
 .venv/
+uv.lock
 __pycache__/
 build/
 dist/
 *.egg-info/
 *.py[cod]
 examples/output/
-

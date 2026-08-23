@@ -1,0 +1,179 @@
+{
+  "schema": "org.tpxlab.public-data-validation/0.1-draft",
+  "dataset_id": "TPX-PUB-001",
+  "access_date": "2026-08-23",
+  "title": "Dataset for: Dopant-Controlled Oxygen Vacancy Dynamics Define CO2-to-Methanol Catalysis on In2O3",
+  "record_doi": "10.5281/zenodo.21884075",
+  "concept_doi": "10.5281/zenodo.19450659",
+  "article_doi": "10.1038/s41467-026-72876-w",
+  "dataset_license": "CC-BY-4.0",
+  "article_license": "CC-BY-NC-ND-4.0",
+  "source_url": "https://zenodo.org/api/records/21884075/files/08_Figure_5_d_e_f_g_TPR.zip/content",
+  "archive": {
+    "name": "08_Figure_5_d_e_f_g_TPR.zip",
+    "size_bytes": 4401662,
+    "sha256": "f1489430b9cf1f664f64ca27a117e26cadb597e6d250ff0ec4c82758578886e8"
+  },
+  "required_columns": [
+    "timestamp",
+    "timedelta (min)",
+    "T_C",
+    "TCD_signal",
+    "TCD_signal/g_cat"
+  ],
+  "derived_ramp_selection": {
+    "description": "For validation statistics only: first observation at or above 50 degC through the first subsequent observation at or above 940 degC.",
+    "start_temperature_degC": 50.0,
+    "stop_temperature_degC": 940.0,
+    "expected_observed_rate_degC_per_min": [4.9, 5.1],
+    "supplement_reported_rate_degC_per_min": 10.0
+  },
+  "analysis": {
+    "baseline_method": "linear",
+    "peak_polarity": "negative",
+    "fit_mode": "global",
+    "integration_method": "trapezoid",
+    "calibration": null,
+    "component_interpretation": "Empirical numerical components only; no chemical assignment or uniqueness claim."
+  },
+  "members": [
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Sn_CO2_pulses.csv",
+      "size_bytes": 2665308,
+      "sha256": "c4c6021e8a1ae9210087d46f03e20d103b6f30c97814aa74cdce7b4dbc02627d",
+      "analysis_role": "out_of_scope_pulse_reference"
+    },
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Sn_TPR_5H2Ar.csv",
+      "size_bytes": 1760032,
+      "sha256": "291e11d5c7aa46849cc98a358b7ca64c36f849e469f1b3524c1a9205f3c5c77f",
+      "analysis_role": "tpr_validation",
+      "expected_rows": 14368,
+      "paper_tmax_degC": 577.0,
+      "paper_delta_tmax_degC": null,
+      "components": [
+        {
+          "center": 507.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 397.0,
+          "center_upper": 547.0,
+          "width_lower": 10.0,
+          "width_upper": 180.0
+        },
+        {
+          "center": 587.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 547.0,
+          "center_upper": 647.0,
+          "width_lower": 10.0,
+          "width_upper": 150.0
+        }
+      ]
+    },
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Sn_TPR_5H2Ar01CO2.csv",
+      "size_bytes": 2082893,
+      "sha256": "4a1f66b3a53ae2e617684b2b64bb18737dba6edc97bfef3387392a76acc2ffd5",
+      "analysis_role": "tpr_validation",
+      "expected_rows": 16579,
+      "paper_tmax_degC": 598.0,
+      "paper_delta_tmax_degC": 21.0,
+      "delta_reference": "08_Figure_5_d_e_f_g_TPR/In2O3_5Sn_TPR_5H2Ar.csv",
+      "components": [
+        {
+          "center": 528.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 418.0,
+          "center_upper": 568.0,
+          "width_lower": 10.0,
+          "width_upper": 180.0
+        },
+        {
+          "center": 608.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 568.0,
+          "center_upper": 668.0,
+          "width_lower": 10.0,
+          "width_upper": 150.0
+        }
+      ]
+    },
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Zr_CO2_pulses.csv",
+      "size_bytes": 2669724,
+      "sha256": "92c6d9be16559fa02e90b8c37cefb8fd1e24b926e9204800752c9e181ec94a32",
+      "analysis_role": "out_of_scope_pulse_reference"
+    },
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Zr_TPR_5H2Ar.csv",
+      "size_bytes": 1875667,
+      "sha256": "3c69fabd077049d8434d07a15d6dc01c0b5349be14bac4111c205b8a0fe9b0ad",
+      "analysis_role": "tpr_validation",
+      "expected_rows": 15351,
+      "paper_tmax_degC": 591.0,
+      "paper_delta_tmax_degC": null,
+      "components": [
+        {
+          "center": 521.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 411.0,
+          "center_upper": 561.0,
+          "width_lower": 10.0,
+          "width_upper": 180.0
+        },
+        {
+          "center": 601.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 561.0,
+          "center_upper": 661.0,
+          "width_lower": 10.0,
+          "width_upper": 150.0
+        }
+      ]
+    },
+    {
+      "path": "08_Figure_5_d_e_f_g_TPR/In2O3_5Zr_TPR_5H2Ar01CO2.csv",
+      "size_bytes": 2953645,
+      "sha256": "505f3ad32e7756213016dcef90bc6c5a911ca3fa899666ef7ab26843d75a0485",
+      "analysis_role": "tpr_validation",
+      "expected_rows": 16665,
+      "paper_tmax_degC": 630.0,
+      "paper_delta_tmax_degC": 39.0,
+      "delta_reference": "08_Figure_5_d_e_f_g_TPR/In2O3_5Zr_TPR_5H2Ar.csv",
+      "components": [
+        {
+          "center": 560.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 450.0,
+          "center_upper": 600.0,
+          "width_lower": 10.0,
+          "width_upper": 180.0
+        },
+        {
+          "center": 640.0,
+          "left": 350.0,
+          "right": 800.0,
+          "model": "gaussian",
+          "center_lower": 600.0,
+          "center_upper": 700.0,
+          "width_lower": 10.0,
+          "width_upper": 150.0
+        }
+      ]
+    }
+  ]
+}

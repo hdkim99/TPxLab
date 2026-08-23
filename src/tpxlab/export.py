@@ -15,6 +15,12 @@ from tpxlab.models import AnalysisResult
 def result_tables(result: AnalysisResult) -> dict[str, pd.DataFrame]:
     """Convert every result layer to tables without dropping settings or QC."""
 
+    signal_transformation = (
+        "raw_signal - baseline"
+        if result.settings.peak_polarity == "positive"
+        else "baseline - raw_signal"
+    )
+
     raw = pd.DataFrame(
         {
             "time": result.raw.time,
@@ -128,6 +134,12 @@ def result_tables(result: AnalysisResult) -> dict[str, pd.DataFrame]:
         {"key": "time_unit", "value": result.raw.time_unit},
         {"key": "temperature_unit", "value": result.raw.temperature_unit},
         {"key": "signal_unit", "value": result.raw.signal_unit},
+        {"key": "peak_polarity", "value": result.settings.peak_polarity},
+        {"key": "signal_transformation", "value": signal_transformation},
+        {
+            "key": "baseline_coordinate_system",
+            "value": "original detector coordinates",
+        },
     ]
     qc_rows = [asdict(issue) for issue in result.qc_issues]
     return {

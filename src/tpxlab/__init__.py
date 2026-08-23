@@ -5,6 +5,7 @@ from tpxlab.models import (
     AnalysisSettings,
     GlobalFitDiagnostics,
     PeakFit,
+    PeakPolarity,
     PeakSeed,
     RawData,
 )
@@ -17,9 +18,10 @@ __all__ = [
     "AnalysisSettings",
     "GlobalFitDiagnostics",
     "PeakFit",
+    "PeakPolarity",
     "PeakSeed",
     "RawData",
     "ReductionDegree",
     "calculate_reduction_degree",
 ]
-__version__ = "0.2.1"
+__version__ = "0.2.2"

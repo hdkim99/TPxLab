@@ -105,8 +105,9 @@ print(result.global_fit.identifiable, result.global_fit.statistics.r_squared)
 |---|---|---|
 | CSV and XLSX import | Supported | explicit or conservative automatic 3-column mapping |
 | Linear, polynomial, ALS baseline | Supported | raw data is copied and read-only |
+| Positive/negative detector peaks | Supported | explicit polarity; raw/baseline stay in detector coordinates |
 | Optional Savitzky-Golay smoothing | Supported | parameters exported |
-| Peak detection and manual edits | Supported | positive peaks; add/update/remove in GUI |
+| Peak detection and manual edits | Supported | positive-area peaks after explicit polarity; add/update/remove in GUI |
 | Simultaneous global deconvolution | Supported | one summed residual; mixed Gaussian/Lorentzian/Voigt |
 | Center/width constraints | Supported | positive areas; validated bounds and fixed parameters |
 | Shared width constraint | Supported | named shared `sigma` or `gamma` groups only |
@@ -145,13 +146,16 @@ PNG/SVG/PDF figures include raw/baseline, components/total, and residual.
 - Peak fit `area` is with respect to temperature; calibrated detector integration is with
   respect to time. Both are labeled separately.
 - Baseline and model choices remain analytical assumptions requiring residual review.
-  TPxLab fits positive peaks and does not infer gas identity, chemistry, oxidation state,
+  TPxLab orients explicitly declared positive/negative detector responses into positive-area
+  models and does not infer polarity, gas identity, chemistry, oxidation state,
   stoichiometry, or expected consumption.
 - Non-monotonic temperature programs are flagged; repeated temperature ranges require
   user review.
 
 Definitions, equations, parameter ordering, and validation details are in
 [Scientific methods](https://github.com/hdkim99/TPxLab/blob/main/docs/scientific-methods.md).
+The reviewed, opt-in actual-research-data source is documented in
+[Public data sources](https://github.com/hdkim99/TPxLab/blob/main/docs/public-data-sources.md).
 The provisional, explicitly non-stable export contract is in
 [Interchange metadata](https://github.com/hdkim99/TPxLab/blob/main/docs/interchange.md).
 

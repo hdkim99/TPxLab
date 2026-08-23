@@ -17,6 +17,7 @@ from tpxlab.models import (
     FitMode,
     IntegrationMethod,
     PeakModel,
+    PeakPolarity,
     PeakSeed,
 )
 from tpxlab.pipeline import AnalysisService
@@ -43,6 +44,15 @@ def _parser() -> argparse.ArgumentParser:
     analyze.add_argument("--temperature-unit", default="degC")
     analyze.add_argument("--signal-unit", default="millivolt")
     analyze.add_argument("--baseline", choices=("linear", "polynomial", "als"), default="als")
+    analyze.add_argument(
+        "--peak-polarity",
+        choices=("positive", "negative"),
+        default="positive",
+        help=(
+            "detector response direction: positive uses signal-baseline; "
+            "negative uses baseline-signal"
+        ),
+    )
     analyze.add_argument("--polynomial-degree", type=int, default=2)
     analyze.add_argument("--endpoint-fraction", type=float, default=0.1)
     analyze.add_argument("--als-lambda", type=float, default=1.0e6)
@@ -124,6 +134,7 @@ def _analyze(args: argparse.Namespace) -> int:
     )
     settings = AnalysisSettings(
         baseline_method=cast(BaselineMethod, args.baseline),
+        peak_polarity=cast(PeakPolarity, args.peak_polarity),
         polynomial_degree=args.polynomial_degree,
         endpoint_fraction=args.endpoint_fraction,
         als_lambda=args.als_lambda,
