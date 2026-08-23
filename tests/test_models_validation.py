@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from tpxlab import validation
 from tpxlab.models import RawData
 from tpxlab.validation import DataValidationError, validate_raw_data
 
@@ -29,6 +30,34 @@ def test_validation_rejects_duplicate_time() -> None:
 def test_validation_rejects_incompatible_units() -> None:
     raw = RawData(np.arange(5.0), np.arange(5.0), np.ones(5), time_unit="gram")
     with pytest.raises(DataValidationError, match="unit"):
+        validate_raw_data(raw)
+
+
+def test_validation_rejects_undefined_unit() -> None:
+    raw = RawData(
+        np.arange(5.0),
+        np.arange(5.0),
+        np.ones(5),
+        signal_unit="definitely_not_a_defined_unit",
+    )
+    with pytest.raises(DataValidationError, match=r"undefined|defined|unit"):
+        validate_raw_data(raw)
+
+
+def test_validation_rejects_invalid_unit_syntax() -> None:
+    raw = RawData(np.arange(5.0), np.arange(5.0), np.ones(5), time_unit="[broken")
+    with pytest.raises(DataValidationError, match="invalid"):
+        validate_raw_data(raw)
+
+
+def test_validation_does_not_misclassify_unexpected_registry_bug(monkeypatch) -> None:
+    class BrokenRegistry:
+        def __call__(self, _unit: str) -> None:
+            raise RuntimeError("unexpected registry failure")
+
+    monkeypatch.setattr(validation, "_UREG", BrokenRegistry())
+    raw = RawData(np.arange(5.0), np.arange(5.0), np.ones(5))
+    with pytest.raises(RuntimeError, match="unexpected registry failure"):
         validate_raw_data(raw)
 
 

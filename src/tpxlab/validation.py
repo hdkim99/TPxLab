@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from tokenize import TokenError
 from typing import Any
 
 import numpy as np
 from pint import UnitRegistry
+from pint.errors import PintError
 
 from tpxlab.models import QCIssue, RawData
 
@@ -31,7 +33,7 @@ def validate_raw_data(data: RawData) -> tuple[QCIssue, ...]:
         (1 * _UREG(data.time_unit)).to("second")
         (1 * _UREG(data.temperature_unit)).to("kelvin")
         _UREG(data.signal_unit)
-    except Exception as exc:
+    except (PintError, TypeError, ValueError, TokenError) as exc:
         raise DataValidationError(
             f"invalid or dimensionally incompatible channel unit: {exc}"
         ) from exc
