@@ -50,6 +50,8 @@ Homepage = "https://github.com/hdkim99/TPxLab"
 Documentation = "https://github.com/hdkim99/TPxLab/tree/main/docs"
 Issues = "https://github.com/hdkim99/TPxLab/issues"
 Source = "https://github.com/hdkim99/TPxLab"
+Repository = "https://github.com/hdkim99/TPxLab"
+Releases = "https://github.com/hdkim99/TPxLab/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tpxlab"]
