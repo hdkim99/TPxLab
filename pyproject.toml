@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tpxlab"
+version = "0.1.0"
+description = "Reproducible analysis of temperature-programmed catalyst characterization data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "TPxLab contributors" }]
+keywords = ["catalysis", "TPR", "TPD", "TPO", "peak fitting"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "openpyxl>=3.1",
+  "pandas>=2.1",
+  "pint>=0.23",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "mypy>=1.10",
+  "pandas-stubs>=2.1",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.6",
+  "twine>=5",
+]
+
+[project.scripts]
+tpxlab = "tpxlab.cli:main"
+tpxlab-gui = "tpxlab.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/hdkim99/TPxLab"
+Documentation = "https://github.com/hdkim99/TPxLab/tree/main/docs"
+Issues = "https://github.com/hdkim99/TPxLab/issues"
+Source = "https://github.com/hdkim99/TPxLab"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tpxlab"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config"
+testpaths = ["tests"]
+markers = [
+  "scientific: hand-calculated or synthetic scientific validation",
+  "gui: tests requiring a graphical display",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+# Dependency stubs use Python 3.12 type-alias syntax; runtime compatibility remains
+# enforced separately by Ruff's py310 target and the CI Python 3.10 test job.
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+packages = ["tpxlab"]
+
+[[tool.mypy.overrides]]
+module = ["scipy.*", "matplotlib.*", "pandas.*", "pint.*"]
+ignore_missing_imports = true
