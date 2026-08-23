@@ -15,10 +15,11 @@ reproducible exports. The same `AnalysisService` powers its Python API, CLI, and
 ## Install
 
 ```bash
-python -m pip install tpxlab
+python -m pip install \
+  https://github.com/hdkim99/TPxLab/releases/download/v0.1.0/tpxlab-0.1.0-py3-none-any.whl
 ```
 
-For a source checkout:
+TPxLab is not yet published on PyPI. For a source checkout:
 
 ```bash
 python -m pip install -e .
@@ -102,4 +103,3 @@ python -m build
 Runtime dependencies use permissive licenses compatible with MIT: NumPy/SciPy/pandas
 (BSD), Pint (BSD), Matplotlib (PSF-based), and openpyxl (MIT). See `pyproject.toml` for
 the complete declared dependency set and [CONTRIBUTING.md](CONTRIBUTING.md) for policy.
-
