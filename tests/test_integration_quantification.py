@@ -3,11 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from tpxlab import ReductionDegree, calculate_reduction_degree
 from tpxlab.integration import integrate_peaks
 from tpxlab.models import IntegratedPeak, PeakSeed
 from tpxlab.peaks import gaussian
 from tpxlab.quantification import QuantificationError, quantify_peaks
-from tpxlab.stoichiometry import calculate_reduction_degree
 
 
 @pytest.mark.scientific
@@ -68,3 +68,4 @@ def test_explicit_stoichiometry_and_unclipped_sanity_result() -> None:
     )
     assert result.expected_amount_mol == pytest.approx(0.002)
     assert result.percent == pytest.approx(110)
+    assert isinstance(result, ReductionDegree)
