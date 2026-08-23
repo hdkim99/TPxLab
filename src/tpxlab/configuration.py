@@ -75,18 +75,14 @@ def _component(value: object, index: int) -> PeakSeed:
         raise ValueError(f"component {index} has unsupported model {model_value!r}")
     shared_parameter = _optional_string(record, "shared_width_parameter", index)
     if shared_parameter is not None and shared_parameter not in _SHARED_WIDTHS:
-        raise ValueError(
-            f"component {index} shared_width_parameter must be 'sigma' or 'gamma'"
-        )
+        raise ValueError(f"component {index} shared_width_parameter must be 'sigma' or 'gamma'")
     fixed_record = _object(
         record.get("fixed_parameters", {}), f"component {index} fixed_parameters"
     )
     fixed: dict[str, float] = {}
     for name, fixed_value in fixed_record.items():
         if isinstance(fixed_value, bool) or not isinstance(fixed_value, (int, float)):
-            raise ValueError(
-                f"component {index} fixed parameter {name!r} must be numeric"
-            )
+            raise ValueError(f"component {index} fixed parameter {name!r} must be numeric")
         fixed[name] = float(fixed_value)
     return PeakSeed(
         center=center,

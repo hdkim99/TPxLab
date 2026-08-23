@@ -217,8 +217,7 @@ class AnalysisService:
                             code="POOR_PEAK_FIT",
                             severity="warning",
                             message=(
-                                f"peak {fit.peak_id} has R-squared "
-                                f"{fit.statistics.r_squared:.4g}"
+                                f"peak {fit.peak_id} has R-squared {fit.statistics.r_squared:.4g}"
                             ),
                         )
                     )

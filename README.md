@@ -64,15 +64,36 @@ from tpxlab.io import load_raw_data
 
 raw = load_raw_data("examples/overlapping_tpr.csv")
 components = [
-    PeakSeed(332, 220, 540, model="gaussian",
-             center_lower=310, center_upper=350,
-             width_lower=5, width_upper=35),
-    PeakSeed(373, 220, 540, model="lorentzian",
-             center_lower=355, center_upper=390,
-             width_lower=4, width_upper=25),
-    PeakSeed(414, 220, 540, model="voigt",
-             center_lower=395, center_upper=430,
-             width_lower=4, width_upper=28),
+    PeakSeed(
+        332,
+        220,
+        540,
+        model="gaussian",
+        center_lower=310,
+        center_upper=350,
+        width_lower=5,
+        width_upper=35,
+    ),
+    PeakSeed(
+        373,
+        220,
+        540,
+        model="lorentzian",
+        center_lower=355,
+        center_upper=390,
+        width_lower=4,
+        width_upper=25,
+    ),
+    PeakSeed(
+        414,
+        220,
+        540,
+        model="voigt",
+        center_lower=395,
+        center_upper=430,
+        width_lower=4,
+        width_upper=28,
+    ),
 ]
 result = AnalysisService().analyze(
     raw,

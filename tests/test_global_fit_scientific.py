@@ -10,9 +10,7 @@ from tpxlab.peaks import gaussian, lorentzian, voigt
 
 def _overlapping_gaussian_seeds(*, shared: bool = False) -> tuple[PeakSeed, PeakSeed]:
     shared_values = (
-        {"shared_width_group": "thermal", "shared_width_parameter": "sigma"}
-        if shared
-        else {}
+        {"shared_width_group": "thermal", "shared_width_parameter": "sigma"} if shared else {}
     )
     return (
         PeakSeed(
@@ -69,11 +67,7 @@ def test_global_noiseless_fit_recovers_two_overlapping_gaussians() -> None:
 def test_global_noisy_mixed_models_recover_three_components() -> None:
     rng = np.random.default_rng(20260823)
     x = np.linspace(220, 470, 701)
-    clean = (
-        gaussian(x, 100, 310, 12)
-        + lorentzian(x, 80, 345, 9)
-        + voigt(x, 120, 385, 10, 5)
-    )
+    clean = gaussian(x, 100, 310, 12) + lorentzian(x, 80, 345, 9) + voigt(x, 120, 385, 10, 5)
     observed = clean + rng.normal(0, 0.0015, len(x))
     seeds = (
         PeakSeed(307, 235, 450, "gaussian", 295, 325, 3, 25),
@@ -238,13 +232,9 @@ def test_parameter_recovery_is_stable_across_sampling_density() -> None:
         x = np.linspace(200, 500, count)
         y = gaussian(x, 250, 330, 25) + gaussian(x, 160, 365, 18)
         result = fit_peaks_global(x, y, _overlapping_gaussian_seeds(), "gaussian")
-        return [
-            (fit.center, fit.area, fit.parameters["sigma"]) for fit in result.fits
-        ]
+        return [(fit.center, fit.area, fit.parameters["sigma"]) for fit in result.fits]
 
-    assert np.asarray(fitted(301)) == pytest.approx(
-        np.asarray(fitted(1201)), rel=1e-7, abs=1e-7
-    )
+    assert np.asarray(fitted(301)) == pytest.approx(np.asarray(fitted(1201)), rel=1e-7, abs=1e-7)
 
 
 def test_boundary_solution_marks_uncertainty_as_boundary_limited() -> None:

@@ -10,7 +10,7 @@ def test_release_workflow_is_published_release_only_and_checks_tag_version() -> 
     assert "release:\n    types: [published]" in workflow
     assert "pull_request:" not in workflow
     assert "push:" not in workflow
-    assert "test \"v${PACKAGE_VERSION}\" = \"${RELEASE_TAG}\"" in workflow
+    assert 'test "v${PACKAGE_VERSION}" = "${RELEASE_TAG}"' in workflow
 
 
 def test_release_workflow_separates_verified_build_from_tokenless_oidc_publish() -> None:
@@ -20,9 +20,9 @@ def test_release_workflow_separates_verified_build_from_tokenless_oidc_publish()
     assert "actions/upload-artifact@v7" in workflow
     assert "actions/download-artifact@v8" in workflow
     assert "python -m twine check dist/*" in workflow
-    assert "tpxlab-release-venv/bin/python\" -m pip check" in workflow
-    assert "tpxlab-release-venv/bin/python\" -c \"import tpxlab" in workflow
-    assert "tpxlab\" --help" in workflow
+    assert 'tpxlab-release-venv/bin/python" -m pip check' in workflow
+    assert 'tpxlab-release-venv/bin/python" -c "import tpxlab' in workflow
+    assert 'tpxlab" --help' in workflow
     assert "examples/overlapping_tpr.csv" in workflow
     assert "xvfb-run" in workflow
     publish = workflow.split("  publish:\n", maxsplit=1)[1]

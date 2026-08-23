@@ -108,9 +108,7 @@ def _component_specs(
                     f"peak {peak_id} model {model} has no {width_parameter} parameter to share"
                 )
             if width_parameter in fixed:
-                raise ValueError(
-                    f"peak {peak_id} cannot both fix and share {width_parameter}"
-                )
+                raise ValueError(f"peak {peak_id} cannot both fix and share {width_parameter}")
             assert seed.shared_width_group is not None
             prior = shared_groups.setdefault(seed.shared_width_group, width_parameter)
             if prior != width_parameter:
@@ -118,31 +116,35 @@ def _component_specs(
                     f"shared group {seed.shared_width_group!r} mixes {prior} and {width_parameter}"
                 )
 
-        center_lower = left if seed.center_lower is None else _finite_float(
-            seed.center_lower, f"peak {peak_id} center_lower"
+        center_lower = (
+            left
+            if seed.center_lower is None
+            else _finite_float(seed.center_lower, f"peak {peak_id} center_lower")
         )
-        center_upper = right if seed.center_upper is None else _finite_float(
-            seed.center_upper, f"peak {peak_id} center_upper"
+        center_upper = (
+            right
+            if seed.center_upper is None
+            else _finite_float(seed.center_upper, f"peak {peak_id} center_upper")
         )
         if not center_lower < center_upper:
             raise ValueError(f"peak {peak_id} center bounds must satisfy lower < upper")
         if center_lower < left or center_upper > right:
-            raise ValueError(
-                f"peak {peak_id} center bounds must lie within its integration region"
-            )
+            raise ValueError(f"peak {peak_id} center bounds must lie within its integration region")
         if not center_lower <= seed.center <= center_upper:
             raise ValueError(f"peak {peak_id} initial center lies outside its center bounds")
 
-        width_lower = x_step / 10 if seed.width_lower is None else _finite_float(
-            seed.width_lower, f"peak {peak_id} width_lower"
+        width_lower = (
+            x_step / 10
+            if seed.width_lower is None
+            else _finite_float(seed.width_lower, f"peak {peak_id} width_lower")
         )
-        width_upper = span if seed.width_upper is None else _finite_float(
-            seed.width_upper, f"peak {peak_id} width_upper"
+        width_upper = (
+            span
+            if seed.width_upper is None
+            else _finite_float(seed.width_upper, f"peak {peak_id} width_upper")
         )
         if width_lower <= 0 or not width_lower < width_upper:
-            raise ValueError(
-                f"peak {peak_id} width bounds must satisfy 0 < lower < upper"
-            )
+            raise ValueError(f"peak {peak_id} width bounds must satisfy 0 < lower < upper")
 
         mask = (x >= left) & (x <= right)
         region_x = np.asarray(x[mask], dtype=np.float64)
@@ -424,9 +426,7 @@ def fit_peaks_global(
                 np.asarray([center], dtype=np.float64), component.model, parameters_array
             )[0]
         )
-        component_keys = {
-            key for key in layout.component_keys[index].values() if key is not None
-        }
+        component_keys = {key for key in layout.component_keys[index].values() if key is not None}
         component_at_boundary = any(key in active_bounds for key in component_keys)
         fits.append(
             PeakFit(

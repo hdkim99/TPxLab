@@ -87,13 +87,11 @@ def main() -> int:
     signal += rng.normal(0, 0.0015, len(signal))
 
     dataset = project / "examples" / "overlapping_tpr.csv"
-    pd.DataFrame(
-        {"time": time, "temperature": temperature, "signal": signal}
-    ).to_csv(dataset, index=False, float_format="%.9g")
-    configuration = project / "examples" / "overlapping_components.json"
-    configuration.write_text(
-        json.dumps(configuration_payload(), indent=2) + "\n", encoding="utf-8"
+    pd.DataFrame({"time": time, "temperature": temperature, "signal": signal}).to_csv(
+        dataset, index=False, float_format="%.9g"
     )
+    configuration = project / "examples" / "overlapping_components.json"
+    configuration.write_text(json.dumps(configuration_payload(), indent=2) + "\n", encoding="utf-8")
 
     result = AnalysisService().analyze(
         load_raw_data(dataset),
