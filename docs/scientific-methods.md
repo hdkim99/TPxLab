@@ -28,13 +28,44 @@ or remove them before fitting.
 ## Parametric fitting
 
 Gaussian, Lorentzian, and Voigt functions are normalized so their fitted `area`
-parameter is the integral with respect to temperature. Non-negative area/width bounds
-are enforced. Fits use SciPy bounded nonlinear least squares and report covariance,
+parameter is the integral with respect to temperature. Positive area/width bounds are
+enforced. Fits use SciPy bounded nonlinear least squares and report covariance,
 parameter standard errors, RSS, RMSE, R², and degrees of freedom.
 
-Version 0.1 fits each user-bounded or midpoint-bounded region independently. It does
-**not** claim overlapping multi-peak deconvolution. Voigt FWHM uses the standard Olivero-
-Longbothum approximation; Gaussian and Lorentzian FWHM values are analytic.
+Gaussian and Lorentzian have parameter order `(area, center, sigma|gamma)`; Voigt has
+`(area, center, sigma, gamma)`. Voigt FWHM uses the Olivero-Longbothum approximation;
+Gaussian and Lorentzian FWHM values are analytic.
+
+### Simultaneous global mode
+
+For components `f_k(x; theta_k)`, global mode solves one problem over all observations:
+
+`min_theta sum_i [y_i - sum_k f_k(x_i; theta_k)]^2`
+
+using `scipy.optimize.least_squares` with bounded trust-region reflective optimization.
+Area and width parameters are positive. A fixed parameter is removed from the free
+vector. A named shared `sigma` or `gamma` occupies one free-vector position used by all
+members; the intersection of their bounds must be nonempty. Mixed Gaussian, Lorentzian,
+and Voigt components are allowed. Free-vector ordering is deterministic and exported.
+
+The complete model reports RSS, RMSE, R², observations, free-parameter count, degrees of
+freedom, Jacobian rank and condition number, active bounds, optimizer status, and the
+global covariance matrix. Covariance is `RSS/dof * (J.T J)^-1` only for a full-rank
+Jacobian with positive degrees of freedom. Rank deficiency or inversion failure yields
+explicit unavailable (NaN) uncertainties. A bound-active result is labeled
+boundary-limited because an unconstrained local covariance can be misleading there.
+
+These diagnostics describe local numerical identifiability; they do not prove unique
+physical interpretation. Closely coincident components, weak components, excessive model
+complexity, or broad parameter bounds can remain ill-conditioned. Users must inspect the
+component sum and residual and justify model/bound/shared-width assumptions.
+
+### Independent compatibility mode
+
+Independent mode retains the v0.1 behavior: each user-bounded or midpoint-bounded region
+is fitted separately. Its sum is plotted for convenience but is not overlapping
+deconvolution. Global-only fixed/shared/center/width constraints are rejected rather than
+silently ignored.
 
 ## Numerical integration and quantification
 
@@ -42,6 +73,11 @@ Peak bounds are expressed in temperature, but detector area is numerically integ
 against measured **time**, not sample index. Trapezoid and Simpson methods both receive
 the actual time coordinates, so irregular intervals are respected. Consequently the
 area unit is `signal_unit × time_unit`.
+
+Independent mode integrates the observed signal inside each resolved region. Global mode
+integrates each fitted component separately across the measured interval, or inside
+explicit user bounds, which avoids double-counting an overlapped observed region. Export
+field `integration_source` distinguishes `observed_region` from `fitted_component`.
 
 Quantification evaluates:
 
@@ -60,7 +96,8 @@ reaction-definition, or data-quality issue.
 
 ## Scientific validation
 
-The test suite independently checks exact Gaussian parameter recovery, seeded noisy
-recovery, numerical area under irregular sampling, sampling-density stability, unit
-scaling, incompatible dimensions, raw immutability, and explicit stoichiometry.
-
+The test suite independently checks exact and noisy recovery of two to three overlapping
+components, mixed model families, scaling, fixed/shared constraints, invalid bounds,
+rank deficiency, insufficient degrees of freedom, boundary uncertainty, sampling-density
+stability, irregular-time integration, unit scaling/dimensional errors, raw immutability,
+GUI/service call paths, export provenance, and explicit stoichiometry.

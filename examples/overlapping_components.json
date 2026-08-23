@@ -1,0 +1,39 @@
+{
+  "schema": "org.tpxlab.components/0.2-draft",
+  "fit_mode": "global",
+  "components": [
+    {
+      "center": 332,
+      "left": 220,
+      "right": 540,
+      "model": "gaussian",
+      "center_lower": 310,
+      "center_upper": 350,
+      "width_lower": 5,
+      "width_upper": 35,
+      "fixed_parameters": {}
+    },
+    {
+      "center": 373,
+      "left": 220,
+      "right": 540,
+      "model": "lorentzian",
+      "center_lower": 355,
+      "center_upper": 390,
+      "width_lower": 4,
+      "width_upper": 25,
+      "fixed_parameters": {}
+    },
+    {
+      "center": 414,
+      "left": 220,
+      "right": 540,
+      "model": "voigt",
+      "center_lower": 395,
+      "center_upper": 430,
+      "width_lower": 4,
+      "width_upper": 28,
+      "fixed_parameters": {}
+    }
+  ]
+}

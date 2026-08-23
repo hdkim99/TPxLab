@@ -2,9 +2,9 @@ cff-version: 1.2.0
 message: "If you use TPxLab in published work, please cite the software."
 title: "TPxLab"
 type: software
-version: 0.1.1
-date-released: 2026-08-23
+version: 0.2.0
 authors:
-  - name: "TPxLab contributors"
+  - family-names: "Kim"
+    given-names: "Hyun Dong"
 repository-code: "https://github.com/hdkim99/TPxLab"
 license: MIT

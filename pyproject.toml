@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tpxlab"
-version = "0.1.1"
+version = "0.2.0"
 description = "Reproducible analysis of temperature-programmed catalyst characterization data."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-authors = [{ name = "TPxLab contributors" }]
-keywords = ["catalysis", "TPR", "TPD", "TPO", "peak fitting"]
+authors = [{ name = "Hyun Dong Kim" }]
+keywords = ["catalysis", "TPR", "TPD", "TPO", "peak fitting", "deconvolution"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: MIT License",
