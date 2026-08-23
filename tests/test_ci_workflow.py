@@ -5,15 +5,13 @@ from pathlib import Path
 WORKFLOW = Path(__file__).parents[1] / ".github" / "workflows" / "ci.yml"
 
 
-def test_general_ci_uses_only_the_measured_dgx_runner_and_blocks_fork_prs() -> None:
+def test_general_ci_uses_only_the_measured_dgx_runner_and_blocks_external_or_bot_prs() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     assert "workflow_dispatch:" in workflow
     assert "runs-on: [self-hosted, dgx-spark]" in workflow
     assert "runs-on: ubuntu-latest" not in workflow
-    assert (
-        "if: github.event_name != 'pull_request' || "
-        "github.event.pull_request.head.repo.full_name == github.repository"
-    ) in workflow
+    assert workflow.count("github.actor == github.repository_owner") == 1
+    assert workflow.count("github.event.pull_request.head.repo.full_name == github.repository") == 1
     assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in workflow
 
 
