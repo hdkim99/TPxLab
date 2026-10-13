@@ -16,7 +16,7 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install GUI system dependency
@@ -38,7 +38,7 @@ jobs:
           "${RUNNER_TEMP}/tpxlab-release-venv/bin/tpxlab" analyze examples/overlapping_tpr.csv --components-config examples/overlapping_components.json --baseline linear --output "${RUNNER_TEMP}/tpxlab-release-smoke.xlsx"
           xvfb-run -a "${RUNNER_TEMP}/tpxlab-release-venv/bin/tpxlab-gui" --smoke-test
           PYTHONPATH=src xvfb-run -a "${RUNNER_TEMP}/tpxlab-release-venv/bin/python" tests/gui_widget_smoke.py
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pypi-distributions
           path: dist/
@@ -53,7 +53,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: pypi-distributions
           path: dist/
