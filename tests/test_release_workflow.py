@@ -29,6 +29,6 @@ def test_release_workflow_separates_verified_build_from_tokenless_oidc_publish()
     assert "runs-on: ubuntu-latest" in publish
     assert "name: pypi" in publish
     assert "id-token: write" in publish
-    assert "pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33" in publish
+    assert "pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086" in publish
     assert "secrets." not in workflow
     assert "password:" not in workflow
