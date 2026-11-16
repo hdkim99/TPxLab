@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 - 2026-11-16
+
+- Update the PyPI trusted publishing action to v1.14.3 (GHSA-5xjx-3w67-w9x9).
+  Scientific calculations and public APIs are unchanged.
+
 ## 0.2.2 - 2026-08-23
 
 - Add explicit positive/negative peak polarity through API, CLI, GUI, preprocessing, and

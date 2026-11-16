@@ -24,4 +24,4 @@ __all__ = [
     "ReductionDegree",
     "calculate_reduction_degree",
 ]
-__version__ = "0.2.2"
+__version__ = "0.2.3"
