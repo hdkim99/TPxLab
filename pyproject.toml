@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tpxlab"
-version = "0.2.2"
+version = "0.2.3"
 description = "Reproducible analysis of temperature-programmed catalyst characterization data."
 readme = "README.md"
 requires-python = ">=3.10"
